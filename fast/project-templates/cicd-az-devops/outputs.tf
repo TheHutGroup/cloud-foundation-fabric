@@ -19,6 +19,11 @@ output "docker_registry" {
   value       = module.registry.url
 }
 
+output "secret" {
+  description = "Azure token secret."
+  value       = module.secret.secrets[var.name].id
+}
+
 output "ssh_command" {
   description = "Command to SSH to the agent instance."
   value = nonsensitive(try(

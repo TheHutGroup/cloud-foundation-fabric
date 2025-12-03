@@ -43,24 +43,6 @@ write_files:
           "max-size": "1024m"
         }
       }
-  # agent token pull service
-  - path: /etc/systemd/system/azp-secret.service
-    permissions: "0644"
-    owner: root
-    content: |
-      [Unit]
-      Description=Start Azure Pipelines Agent secret pull
-      After=gcr-online.target docker.socket
-      Wants=gcr-online.target docker.socket docker-events-collector.service
-      Before=azp-agent.service
-      [Service]
-      Type=oneshot
-      StandardOutput=file:/run/azp-agent/token.txt
-      ExecStart=docker run --rm \
-        gcr.io/google.com/cloudsdktool/google-cloud-cli:alpine \
-        gcloud secrets versions access latest \
-        --secret ${name} --project ${project_id}
-      RemainAfterExit=true
   # agent container service
   - path: /etc/systemd/system/azp-agent.service
     permissions: "0644"
@@ -68,22 +50,20 @@ write_files:
     content: |
       [Unit]
       Description=Start Azure Pipelines Agent container
-      After=gcr-online.target docker.socket azp-secret.service
-      Wants=gcr-online.target docker.socket docker-events-collector.service azp-secret.service
+      After=gcr-online.target docker.socket
+      Wants=gcr-online.target docker.socket docker-events-collector.service
       [Service]
       Environment="HOME=/run/azp-agent"
       ExecStart=/usr/bin/docker run --rm --name=azp-agent  \
-        -v /run/azp-agent/token.txt:/token.txt \
+        -e GCP_PROJECT=${project_id} \
+        -e GCP_SECRET=${name} \
         -e AZP_URL="https://dev.azure.com/${azp.instance}" \
-        -e AZP_TOKEN_FILE=/token.txt \
         -e AZP_POOL="${azp.pool}" \
         -e AZP_AGENT_NAME="${agent_name}" \
         ${image}
       ExecStop=/usr/bin/docker stop azp-agent
-
 bootcmd:
   - systemctl start node-problem-detector
-
 runcmd:
   # - iptables -I INPUT 1 -p tcp -m tcp --dport 8080 -m state --state NEW,ESTABLISHED -j ACCEPT
   - systemctl daemon-reload
