@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-locals {
-  format = "deb ar+https://%s-apt.pkg.dev/remote/%s/%s %s main"
-}
-
 output "docker_registry" {
   description = "Docker registry URL."
   value       = module.registry.url

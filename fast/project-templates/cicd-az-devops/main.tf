@@ -81,4 +81,5 @@ module "agent" {
   service_account = {
     email = var.instance_config.service_account
   }
+  depends_on = [module.secret]
 }

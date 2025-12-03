@@ -73,9 +73,9 @@ write_files:
       [Service]
       Environment="HOME=/run/azp-agent"
       ExecStart=/usr/bin/docker run --rm --name=azp-agent  \
-        --network host \
+        -v /run/azp-agent/token.txt:/token.txt \
         -e AZP_URL="https://dev.azure.com/${azp.instance}" \
-        -e AZP_TOKEN_FILE=/run/azp-agent/token.txt \
+        -e AZP_TOKEN_FILE=/token.txt \
         -e AZP_POOL="${azp.pool}" \
         -e AZP_AGENT_NAME="${agent_name}" \
         ${image}
