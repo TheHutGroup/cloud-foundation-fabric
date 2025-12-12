@@ -48,7 +48,7 @@ locals {
     trimsuffix(f, ".yaml") => yamldecode(file("${local._templates_path}/${f}"))
   }
   ctx_project_ids     = merge(local.ctx.project_ids, local.project_ids)
-  ctx_project_numbers = merge(local.ctx.project_ids, local.project_numbers)
+  ctx_project_numbers = merge(local.ctx.project_numbers, local.project_numbers)
   project_ids = {
     for k, v in module.projects : k => v.project_id
   }
@@ -86,6 +86,7 @@ module "projects" {
   billing_account     = each.value.billing_account
   deletion_policy     = each.value.deletion_policy
   name                = each.value.name
+  descriptive_name    = each.value.descriptive_name
   parent              = each.value.parent
   prefix              = each.value.prefix
   project_reuse       = each.value.project_reuse
@@ -100,7 +101,6 @@ module "projects" {
     folder_ids = local.ctx_folder_ids
   })
   default_service_account = try(each.value.default_service_account, "keep")
-  descriptive_name        = try(each.value.descriptive_name, null)
   factories_config = {
     custom_roles           = try(each.value.factories_config.custom_roles, null)
     org_policies           = try(each.value.factories_config.org_policies, null)
