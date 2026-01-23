@@ -121,6 +121,13 @@ resource "google_compute_disk" "boot" {
       )
     }
   }
+
+  # This prevents the VM from being re-created when the image family updates
+  lifecycle {
+    ignore_changes = [
+      image
+    ]
+  }
 }
 
 resource "google_compute_disk" "disks" {
@@ -451,13 +458,6 @@ resource "google_compute_instance" "default" {
       type  = guest_accelerator.value.type
       count = guest_accelerator.value.count
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      # This prevents the VM from being re-created when the image family updates
-      boot_disk[0].initialize_params[0].image,
-    ]
   }
 }
 
