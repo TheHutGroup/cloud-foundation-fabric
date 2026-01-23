@@ -452,6 +452,13 @@ resource "google_compute_instance" "default" {
       count = guest_accelerator.value.count
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      # This prevents the VM from being re-created when the image family updates
+      boot_disk[0].initialize_params[0].image,
+    ]
+  }
 }
 
 resource "google_compute_instance_iam_binding" "default" {
