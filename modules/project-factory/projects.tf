@@ -49,6 +49,23 @@ locals {
   }
   ctx_project_ids     = merge(local.ctx.project_ids, local.project_ids)
   ctx_project_numbers = merge(local.ctx.project_numbers, local.project_numbers)
+  # cross-project tag contexts, keyed on project name
+  ctx_tag_keys = merge(local.ctx.tag_keys, {
+    for k, v in merge([
+      for pk, pv in local.projects_input : {
+        for tk, tv in module.projects[pk].tag_keys :
+        "${pv.name}/${tk}" => tv.id
+      }
+    ]...) : k => v
+  })
+  ctx_tag_values = merge(local.ctx.tag_values, {
+    for k, v in merge([
+      for pk, pv in local.projects_input : {
+        for tk, tv in module.projects[pk].tag_values :
+        "${pv.name}/${tk}" => tv.id
+      }
+    ]...) : k => v
+  })
   project_ids = {
     for k, v in module.projects : k => v.project_id
   }
@@ -95,17 +112,18 @@ module "projects" {
     each.value.contacts, var.data_merges.contacts
   )
   context = merge(local.ctx, {
-    condition_vars = {
+    condition_vars = merge(local.ctx.condition_vars, {
       folder_ids = {
         for k, v in local.ctx_folder_ids : replace(k, "$folder_ids:", "") => v
       }
-    }
+    })
     folder_ids = local.ctx_folder_ids
   })
   default_service_account = try(each.value.default_service_account, "keep")
   factories_config = {
     custom_roles           = try(each.value.factories_config.custom_roles, null)
     org_policies           = try(each.value.factories_config.org_policies, null)
+    observability          = try(each.value.factories_config.observability, null)
     quotas                 = try(each.value.factories_config.quotas, null)
     scc_sha_custom_modules = try(each.value.factories_config.scc_sha_custom_modules, null)
     tags                   = try(each.value.factories_config.tags, null)
@@ -129,10 +147,10 @@ module "projects" {
     each.value.services,
     var.data_merges.services
   ))
-  tag_bindings = merge(
-    each.value.tag_bindings, var.data_merges.tag_bindings
-  )
-  tags                    = each.value.tags
+  tags = each.value.tags
+  tags_config = {
+    ignore_iam = true
+  }
   universe                = each.value.universe
   vpc_sc                  = each.value.vpc_sc
   workload_identity_pools = each.value.workload_identity_pools
@@ -141,7 +159,8 @@ module "projects" {
 module "projects-iam" {
   source   = "../project"
   for_each = local.projects_input
-  name     = module.projects[each.key].project_id
+  name     = each.value.name
+  prefix   = each.value.prefix
   project_reuse = {
     use_data_source = false
     attributes = {
@@ -162,6 +181,8 @@ module "projects-iam" {
       local.ctx.project_ids,
       { for k, v in module.projects : k => v.project_id }
     )
+    tag_keys   = local.ctx_tag_keys
+    tag_values = local.ctx_tag_values
   })
   factories_config = {
     # we do anything that can refer to IAM and custom roles in this call
@@ -185,5 +206,16 @@ module "projects-iam" {
   )
   shared_vpc_host_config    = each.value.shared_vpc_host_config
   shared_vpc_service_config = each.value.shared_vpc_service_config
-  universe                  = each.value.universe
+  tag_bindings = merge(
+    each.value.tag_bindings, var.data_merges.tag_bindings
+  )
+  tags = each.value.tags
+  tags_config = {
+    force_context_ids = true
+  }
+  universe = each.value.universe
+  # we use explicit depends_on as this allows us passing name and prefix
+  depends_on = [
+    module.projects
+  ]
 }
