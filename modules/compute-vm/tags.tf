@@ -65,6 +65,10 @@ resource "google_tags_location_tag_binding" "network" {
   )
   tag_value = templatestring(each.value, var.context.tag_vars)
   location  = local.zone
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "google_tags_location_tag_binding" "instance" {
