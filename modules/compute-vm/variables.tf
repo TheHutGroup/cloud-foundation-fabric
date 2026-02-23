@@ -101,6 +101,16 @@ variable "attached_disks" {
     ])
     error_message = "access_mode must be null, 'READ_WRITE_SINGLE', 'READ_ONLY_MANY', or 'READ_WRITE_MANY'."
   }
+  validation {
+    condition = alltrue([
+      for d in var.attached_disks :
+      d.options == null || d.options.access_mode == null || contains(
+        ["READ_WRITE_SINGLE", "READ_ONLY_MANY", "READ_WRITE_MANY"],
+        d.options.access_mode
+      )
+    ])
+    error_message = "access_mode must be null, 'READ_WRITE_SINGLE', 'READ_ONLY_MANY', or 'READ_WRITE_MANY'."
+  }
 }
 
 variable "boot_disk" {
