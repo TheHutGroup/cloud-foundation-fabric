@@ -59,6 +59,10 @@ resource "google_tags_location_tag_binding" "network" {
   )
   tag_value = lookup(local.ctx.tag_values, each.value, each.value)
   location  = local.zone
+
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "google_tags_location_tag_binding" "instance" {
