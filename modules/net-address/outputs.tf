@@ -34,7 +34,7 @@ output "internal_addresses" {
   description = "Allocated internal addresses."
   value = {
     for address in google_compute_address.internal :
-    address.name => address
+    "${address.region}/${address.name}" => address
   }
 }
 
