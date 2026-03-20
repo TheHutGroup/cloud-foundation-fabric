@@ -131,6 +131,7 @@ resource "google_compute_disk" "boot" {
 
   # This prevents the VM from being re-created when the image family updates
   lifecycle {
+    create_before_destroy = false
     ignore_changes = [
       image
     ]
@@ -235,6 +236,7 @@ resource "google_compute_instance" "default" {
   )
 
   lifecycle {
+    create_before_destroy = false
     replace_triggered_by = [terraform_data.rebuild]
   }
 
