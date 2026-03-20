@@ -189,6 +189,12 @@ variable "description" {
   default     = "Managed by the compute-vm Terraform module."
 }
 
+variable "rebuild_trigger" {
+  description = "Arbitrary value that, when changed, forces the VM to be destroyed and recreated."
+  type        = string
+  default     = null
+}
+
 variable "enable_display" {
   description = "Enable virtual display on the instances."
   type        = bool

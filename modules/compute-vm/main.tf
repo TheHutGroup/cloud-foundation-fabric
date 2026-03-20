@@ -92,6 +92,12 @@ resource "google_kms_key_handle" "default" {
   resource_type_selector = each.value.resource_type_selector
 }
 
+resource "terraform_data" "rebuild" {
+  count = !local.template_create && var.rebuild_trigger != null ? 1 : 0
+
+  triggers_replace = var.rebuild_trigger
+}
+
 resource "google_compute_disk" "boot" {
   count   = !local.template_create && var.boot_disk.use_independent_disk ? 1 : 0
   project = local.project_id
@@ -127,6 +133,7 @@ resource "google_compute_disk" "boot" {
     ignore_changes = [
       image
     ]
+    replace_triggered_by = [terraform_data.rebuild]
   }
 }
 
@@ -169,12 +176,12 @@ resource "google_compute_region_disk" "disks" {
     for k, v in local.attached_disks_regional :
     k => v if v.source_type != "attach"
   }
-  project       = local.project_id
-  region        = local.region
-  replica_zones = [local.zone, each.value.options.replica_zone]
-  name          = "${var.name}-${each.key}"
-  type          = each.value.options.type
-  size          = each.value.size
+  project                = local.project_id
+  region                 = local.region
+  replica_zones          = [local.zone, each.value.options.replica_zone]
+  name                   = "${var.name}-${each.key}"
+  type                   = each.value.options.type
+  size                   = each.value.size
   access_mode            = each.value.options.access_mode
   provisioned_iops       = each.value.options.provisioned_iops
   provisioned_throughput = each.value.options.provisioned_throughput
@@ -225,6 +232,10 @@ resource "google_compute_instance" "default" {
       coalesce(local.ischedule, [])
     )
   )
+
+  lifecycle {
+    replace_triggered_by = [terraform_data.rebuild]
+  }
 
   dynamic "advanced_machine_features" {
     for_each = local.advanced_mf != null ? [""] : []

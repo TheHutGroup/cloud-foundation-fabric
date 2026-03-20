@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2026 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-module: modules/compute-vm
-tests:
-  context-template:
-  context-template-regional:
-  context-vm:
-  context-vm-rebuild:
+counts:
+  google_compute_disk: 2
+  google_compute_instance: 1
+  google_compute_instance_iam_binding: 1
+  google_tags_location_tag_binding: 2
+  terraform_data: 1
+  modules: 0
+  resources: 7
