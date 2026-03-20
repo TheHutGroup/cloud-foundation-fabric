@@ -93,8 +93,9 @@ resource "google_kms_key_handle" "default" {
 }
 
 resource "terraform_data" "rebuild" {
-  count = !local.template_create && var.rebuild_trigger != null ? 1 : 0
+  count = !local.template_create ? 1 : 0
 
+  input            = var.rebuild_trigger
   triggers_replace = var.rebuild_trigger
 }
 
