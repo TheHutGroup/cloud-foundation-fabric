@@ -240,7 +240,7 @@ resource "google_compute_instance_template" "default" {
   }
 
   lifecycle {
-    create_before_destroy = true
+    create_before_destroy = false
   }
 }
 
@@ -456,6 +456,6 @@ resource "google_compute_region_instance_template" "default" {
   }
 
   lifecycle {
-    create_before_destroy = true
+    create_before_destroy = false
   }
 }

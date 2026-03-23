@@ -97,10 +97,6 @@ resource "terraform_data" "rebuild" {
 
   input            = var.rebuild_trigger
   triggers_replace = var.rebuild_trigger
-
-  lifecycle {
-    create_before_destroy = false
-  }
 }
 
 resource "google_compute_disk" "boot" {
@@ -241,6 +237,7 @@ resource "google_compute_instance" "default" {
 
   lifecycle {
     create_before_destroy = false
+    replace_triggered_by = [terraform_data.rebuild]
   }
 
   dynamic "advanced_machine_features" {
