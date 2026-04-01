@@ -108,9 +108,12 @@ resource "google_compute_region_disk" "disks" {
   project       = local.project_id
   region        = local.region
   replica_zones = [local.zone, each.value.initialize_params.replica_zone]
-  name          = coalesce(each.value.name, "${var.name}-${each.key}")
-  type          = each.value.initialize_params.type
-  size          = each.value.initialize_params.size
+  name                   = coalesce(each.value.name, "${var.name}-${each.key}")
+  type                   = each.value.initialize_params.type
+  size                   = each.value.initialize_params.size
+  access_mode            = each.value.access_mode
+  provisioned_iops       = each.value.initialize_params.hyperdisk.provisioned_iops
+  provisioned_throughput = each.value.initialize_params.hyperdisk.provisioned_throughput
   # image                  = each.value.source.image
   snapshot = each.value.source.snapshot
   labels = merge(var.labels, {

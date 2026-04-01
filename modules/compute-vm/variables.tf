@@ -17,6 +17,7 @@
 variable "attached_disks" {
   description = "Additional disks. Source type is one of 'image' (zonal disks in vms and template), 'snapshot' (vm), 'existing', and null."
   type = map(object({
+    access_mode  = optional(string)
     auto_delete  = optional(bool, true) # applies only to vm templates
     device_name  = optional(string)
     force_attach = optional(bool)
@@ -50,6 +51,16 @@ variable "attached_disks" {
       contains(["READ_WRITE", "READ_ONLY"], v.mode)
     ])
     error_message = "Allowed values for 'mode' are 'READ_WRITE', 'READ_ONLY'."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.attached_disks :
+      v.access_mode == null || contains(
+        ["READ_WRITE_SINGLE", "READ_ONLY_MANY", "READ_WRITE_MANY"],
+        v.access_mode
+      )
+    ])
+    error_message = "access_mode must be null, 'READ_WRITE_SINGLE', 'READ_ONLY_MANY', or 'READ_WRITE_MANY'."
   }
 }
 
