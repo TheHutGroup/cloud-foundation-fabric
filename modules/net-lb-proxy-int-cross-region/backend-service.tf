@@ -69,10 +69,10 @@ resource "google_compute_backend_service" "default" {
   session_affinity                = var.backend_service_config.session_affinity
   service_lb_policy = (
     try(var.backend_service_config.service_lb_policy_config.enable, false)
-    ? "${google_network_services_service_lb_policies.default[0].id}"
+    ? "//networkservices.googleapis.com/${google_network_services_service_lb_policies.default[0].id}"
     : null
   )
-  timeout_sec                     = var.backend_service_config.timeout_sec
+  timeout_sec = var.backend_service_config.timeout_sec
 
   dynamic "backend" {
     for_each = { for b in coalesce(var.backend_service_config.backends, []) : b.group => b }
