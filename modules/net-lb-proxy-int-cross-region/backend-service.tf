@@ -78,7 +78,7 @@ resource "google_compute_backend_service" "default" {
   timeout_sec                     = each.value.timeout_sec
   service_lb_policy = (
     try(each.value.service_lb_policy_config.enable, false)
-    ? google_network_services_service_lb_policies.default[each.key].id
+    ? "//networkservices.googleapis.com/${google_network_services_service_lb_policies.default[each.key].id}"
     : null
   )
 
