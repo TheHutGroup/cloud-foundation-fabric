@@ -53,9 +53,16 @@ locals {
       : var.health_check
     )
   )
+  # Iterate neg_configs (statically known keys) instead of indexing it with
+  # backend group values: group values can be unknown at plan time (e.g.
+  # instance group self links whose membership is changing), and an unknown
+  # index would make local.hc — and the health check count — unknown,
+  # failing the plan with "Invalid count argument".
   has_psc_backend = anytrue([
-    for b in coalesce(var.backend_service_config.backends, []) :
-    try(var.neg_configs[b.group].psc != null, false)
+    for k, v in var.neg_configs :
+    v.psc != null && contains([
+      for b in coalesce(var.backend_service_config.backends, []) : b.group
+    ], k)
   ])
   neg_endpoints = {
     for v in local._neg_endpoints : (v.key) => v
