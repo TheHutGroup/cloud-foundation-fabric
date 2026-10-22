@@ -290,8 +290,9 @@ variable "service_config" {
       regions = list(string)
     }), null)
     scaling = optional(object({
-      max_instance_count = optional(number)
-      min_instance_count = optional(number)
+      max_instance_count         = optional(number)
+      min_instance_count         = optional(number)
+      service_max_instance_count = optional(number)
     }))
     timeout = optional(string)
   })
