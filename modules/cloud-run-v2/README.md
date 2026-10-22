@@ -22,6 +22,7 @@ Cloud Run Services and Jobs, with support for IAM roles and Eventarc trigger cre
 - [IAP Configuration](#iap-configuration)
 - [Adding GPUs](#adding-gpus)
 - [Multi-Region Service](#multi-region-service)
+- [Service-level maximum instances](#service-level-maximum-instances)
 - [Variables](#variables)
 - [Outputs](#outputs)
 - [Fixtures](#fixtures)
