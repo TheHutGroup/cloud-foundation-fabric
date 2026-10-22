@@ -35,6 +35,16 @@ resource "google_cloud_run_v2_service" "service" {
     }
   }
 
+  # Service-level cap shared by every revision receiving traffic. Cloud Run
+  # fixes it at creation and template-only updates never move it, so it must
+  # be sent explicitly or max_instance_count changes stop at the old value.
+  dynamic "scaling" {
+    for_each = try(var.service_config.scaling.service_max_instance_count, null) == null ? [] : [""]
+    content {
+      max_instance_count = var.service_config.scaling.service_max_instance_count
+    }
+  }
+
   template {
     labels         = var.revision.labels
     encryption_key = var.encryption_key
