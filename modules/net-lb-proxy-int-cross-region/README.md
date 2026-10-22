@@ -16,6 +16,8 @@ This module allows managing Cross-region Internal Proxy Network Load Balancers (
   - [Network Endpoint Groups (NEGs)](#network-endpoint-groups-negs)
     - [Zonal NEG creation](#zonal-neg-creation)
     - [Hybrid NEG creation](#hybrid-neg-creation)
+  - [Multiple Backend Services](#multiple-backend-services)
+  - [TLS Route](#tls-route)
 - [Variables](#variables)
 - [Outputs](#outputs)
 <!-- END TOC -->
@@ -83,21 +85,23 @@ module "tcp-proxy-cross-region" {
     }
   }
 
-  backend_service_config = {
-    backends = [
-      {
-        group = "neg-a"
-        max_connections = {
-          per_endpoint = 100
+  backend_service_configs = {
+    default = {
+      backends = [
+        {
+          group = "neg-a"
+          max_connections = {
+            per_endpoint = 100
+          }
+        },
+        {
+          group = "neg-b"
+          max_connections = {
+            per_endpoint = 100
+          }
         }
-      },
-      {
-        group = "neg-b"
-        max_connections = {
-          per_endpoint = 100
-        }
-      }
-    ]
+      ]
+    }
   }
 }
 # tftest modules=1 resources=9
@@ -123,13 +127,15 @@ module "tcp-proxy-cross-region" {
     }
   }
 
-  backend_service_config = {
-    backends = [{
-      group = "projects/my-project/zones/europe-west1-b/networkEndpointGroups/my-neg"
-      max_connections = {
-        per_endpoint = 100
-      }
-    }]
+  backend_service_configs = {
+    default = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west1-b/networkEndpointGroups/my-neg"
+        max_connections = {
+          per_endpoint = 100
+        }
+      }]
+    }
   }
 
   health_check_config = {
@@ -171,13 +177,15 @@ module "tcp-proxy-cross-region" {
     }
   }
 
-  backend_service_config = {
-    backends = [{
-      group = "neg-a"
-      max_connections = {
-        per_endpoint = 100
-      }
-    }]
+  backend_service_configs = {
+    default = {
+      backends = [{
+        group = "neg-a"
+        max_connections = {
+          per_endpoint = 100
+        }
+      }]
+    }
   }
 }
 # tftest modules=1 resources=5
@@ -216,12 +224,107 @@ module "tcp-proxy-cross-region" {
     }
   }
 
-  backend_service_config = {
-    backends = [{
-      group = "hybrid-a"
-      max_connections = {
-        per_endpoint = 100
-      }
+  backend_service_configs = {
+    default = {
+      backends = [{
+        group = "hybrid-a"
+        max_connections = {
+          per_endpoint = 100
+        }
+      }]
+    }
+  }
+}
+# tftest modules=1 resources=6
+```
+
+### Multiple Backend Services
+
+`backend_service_configs` is a map, so more than one backend service can be attached to the same load balancer. When more than one entry is defined, `target_proxy_config.backend_service_key` must select which one the target TCP proxy points at (unless a `tls_route_config` is used to route by SNI/ALPN — see below).
+
+```hcl
+module "tcp-proxy-cross-region" {
+  source     = "./fabric/modules/net-lb-proxy-int-cross-region"
+  name       = "ilb-proxy-test"
+  project_id = var.project_id
+  port       = 443
+
+  vpc_config = {
+    network = var.vpc.self_link
+    subnetworks = {
+      europe-west1 = var.subnet1.self_link
+    }
+  }
+
+  backend_service_configs = {
+    primary = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west1-b/networkEndpointGroups/neg-primary"
+      }]
+    }
+    secondary = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west1-b/networkEndpointGroups/neg-secondary"
+      }]
+    }
+  }
+
+  target_proxy_config = {
+    backend_service_key = "primary"
+  }
+}
+# tftest modules=1 resources=5
+```
+
+### TLS Route
+
+When `tls_route_config` is set, the module creates a `google_network_services_tls_route` targeting the load balancer's TCP proxy and dispatches to one or more backend services based on SNI / ALPN matches. Rule `destinations.service_name` may reference a `backend_service_configs` key, or a fully qualified backend service id; if `destinations` is omitted, traffic is spread across all defined backend services.
+
+```hcl
+module "tcp-proxy-cross-region" {
+  source     = "./fabric/modules/net-lb-proxy-int-cross-region"
+  name       = "ilb-proxy-test"
+  project_id = var.project_id
+  port       = 443
+
+  vpc_config = {
+    network = var.vpc.self_link
+    subnetworks = {
+      europe-west1 = var.subnet1.self_link
+    }
+  }
+
+  backend_service_configs = {
+    primary = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west1-b/networkEndpointGroups/neg-primary"
+      }]
+    }
+    secondary = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west1-b/networkEndpointGroups/neg-secondary"
+      }]
+    }
+  }
+
+  tls_route_config = {
+    name = "ilb-proxy-test-route"
+    rules = [{
+      matches = [{
+        sni_host = ["primary.example.com"]
+      }]
+      destinations = [{
+        service_name = "primary"
+        weight       = 100
+      }]
+    }, {
+      matches = [{
+        sni_host = ["secondary.example.com"]
+      }]
+      destinations = [{
+        service_name = "secondary"
+        weight       = 100
+      }]
     }]
   }
 }
