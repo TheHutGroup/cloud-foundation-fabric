@@ -200,6 +200,12 @@ variable "maintenance_config" {
   }
 }
 
+variable "maintenance_version" {
+  description = "Explicit maintenance version for the primary. Google updates associated replicas before the primary."
+  type        = string
+  default     = null
+}
+
 variable "managed_connection_pooling_config" {
   description = "Configuration for Managed Connection Pooling. NOTE: This feature is only available for PostgreSQL on Enterprise Plus edition instances."
   type = object({
