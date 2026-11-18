@@ -211,7 +211,6 @@ values:
     description: null
     ip_collection: null
     ip_protocol: TCP
-    ip_version: IPV4
     is_mirroring_collector: null
     labels: null
     load_balancing_scheme: EXTERNAL
