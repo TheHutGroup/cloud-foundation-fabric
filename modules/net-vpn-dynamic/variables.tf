@@ -49,9 +49,27 @@ variable "region" {
 variable "router_config" {
   description = "Cloud Router configuration for the VPN. If you want to reuse an existing router, set create to false and use name to specify the desired router."
   type = object({
-    create    = optional(bool, true)
-    asn       = number
-    name      = optional(string)
+    create = optional(bool, true)
+    asn    = number
+    name   = optional(string)
+    route_policies = optional(map(object({
+      type = string
+      terms = list(object({
+        priority = number
+        match = object({
+          expression  = string
+          title       = optional(string)
+          description = optional(string)
+          location    = optional(string)
+        })
+        actions = list(object({
+          expression  = string
+          title       = optional(string)
+          description = optional(string)
+          location    = optional(string)
+        }))
+      }))
+    })), {})
     keepalive = optional(number)
     custom_advertise = optional(object({
       all_subnets = bool
@@ -59,6 +77,32 @@ variable "router_config" {
     }))
   })
   nullable = false
+
+  validation {
+    condition = alltrue(flatten([
+      for k, v in var.router_config.route_policies : [
+        for t in v.terms :
+        t.priority >= 0 && t.priority < 2147483648
+      ]
+    ]))
+    error_message = "Route policy term priority must be between 0 (inclusive) and 2147483648 (exclusive)."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.router_config.route_policies :
+      length(v.terms) == length(distinct([for t in v.terms : t.priority]))
+    ])
+    error_message = "Route policy term priority must be unique within the policy."
+  }
+
+  validation {
+    condition = alltrue([
+      for k, v in var.router_config.route_policies :
+      contains(["IMPORT", "EXPORT"], v.type)
+    ])
+    error_message = "Route policy type must be IMPORT or EXPORT."
+  }
 }
 
 variable "tunnels" {
@@ -74,6 +118,8 @@ variable "tunnels" {
         all_peer_vpc_subnets = bool
         ip_ranges            = map(string)
       }))
+      export_policies = optional(list(string))
+      import_policies = optional(list(string))
     })
     # each BGP session on the same Cloud Router must use a unique /30 CIDR
     # from the 169.254.0.0/16 block.
@@ -91,11 +137,23 @@ variable "tunnels" {
         pfs        = optional(list(string))
       }))
     }))
-    ike_version   = optional(number, 2)
-    peer_ip       = string
-    router        = optional(string)
-    shared_secret = optional(string)
+    ike_version = optional(number, 2)
+    peer_ip     = string
+    router      = optional(string)
+    shared_secret = optional(object({
+      value      = optional(string)
+      path       = optional(string)
+      wo_version = optional(number)
+    }))
   }))
   default  = {}
   nullable = false
+
+  validation {
+    condition = alltrue([
+      for k, v in var.tunnels :
+      try(v.shared_secret.value, null) == null || try(v.shared_secret.path, null) == null
+    ])
+    error_message = "Only one of shared_secret.value and shared_secret.path can be set."
+  }
 }

@@ -19,8 +19,11 @@ common_tfvars:
 
 tests:
   context:
+  custom_roles:
   iam_by_principals_additive:
   iam_by_principals_conditional:
+  model_armor_nulls:
+  model_armor_sdp_templates:
   no_parent:
   no_prefix:
   org_policies:
@@ -34,5 +37,6 @@ tests:
   prefix:
   service_encryption_keys:
   service_agents:
+  service_agents_networkservices:
   service_agents_universe:
   universe:

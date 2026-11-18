@@ -57,6 +57,28 @@ locals {
   revision_name = (
     var.revision.name == null ? null : "${var.name}-${var.revision.name}"
   )
+  # THG: scaling.service_max_instance_count predates upstream service_scaling
+  # and is kept as a fallback for the service-level max instance cap.
+  _service_max_instance_count = try(
+    var.service_config.scaling.service_max_instance_count, null
+  )
+  service_scaling = (
+    var.service_config.service_scaling == null
+    ? (
+      local._service_max_instance_count == null ? null : {
+        manual_instance_count = null
+        max_instance_count    = local._service_max_instance_count
+        min_instance_count    = null
+        mode                  = null
+      }
+    )
+    : merge(var.service_config.service_scaling, {
+      max_instance_count = try(coalesce(
+        var.service_config.service_scaling.max_instance_count,
+        local._service_max_instance_count
+      ), null)
+    })
+  )
   _resource = {
     "JOB" : (
       var.managed_revision ?

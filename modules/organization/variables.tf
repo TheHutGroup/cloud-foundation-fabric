@@ -164,6 +164,17 @@ variable "asset_search" {
   nullable = false
 }
 
+variable "cloud_armor_policy" {
+  description = "Hierarchical Cloud Armor policy to associate to the organization, excluded folders and projects use the `folders/nnn` and `projects/nnn` (project number) formats, or `$folder_ids:` and `$project_numbers:` context references. The association name defaults to `organization-<id>`. The policy id accepts `$security_policies:` context references. Manage each association either here or via the `attachments` variable of the `net-cloud-armor` module, not both."
+  type = object({
+    name              = optional(string)
+    policy_id         = string
+    excluded_folders  = optional(list(string), [])
+    excluded_projects = optional(list(string), [])
+  })
+  default = null
+}
+
 variable "contacts" {
   description = "List of essential contacts for this resource. Must be in the form EMAIL -> [NOTIFICATION_TYPES]. Valid notification types are ALL, SUSPENSION, SECURITY, TECHNICAL, BILLING, LEGAL, PRODUCT_UPDATES."
   type        = map(list(string))
@@ -190,12 +201,15 @@ variable "context" {
     condition_vars    = optional(map(map(string)), {})
     custom_roles      = optional(map(string), {})
     email_addresses   = optional(map(string), {})
+    folder_ids        = optional(map(string), {})
     iam_principals    = optional(map(string), {})
     kms_keys          = optional(map(string), {})
     locations         = optional(map(string), {})
     log_buckets       = optional(map(string), {})
     project_ids       = optional(map(string), {})
+    project_numbers   = optional(map(string), {})
     pubsub_topics     = optional(map(string), {})
+    security_policies = optional(map(string), {})
     storage_buckets   = optional(map(string), {})
     tag_keys          = optional(map(string), {})
     tag_values        = optional(map(string), {})
@@ -227,10 +241,24 @@ variable "context_aware_access_bindings" {
 }
 
 variable "custom_roles" {
-  description = "Map of role name => list of permissions to create in this project."
-  type        = map(list(string))
-  default     = {}
-  nullable    = false
+  description = "Map of role name => role attributes to create in this organization."
+  type = map(object({
+    permissions = list(string)
+    title       = optional(string)
+    description = optional(string)
+    stage       = optional(string)
+  }))
+  default  = {}
+  nullable = false
+  validation {
+    condition = alltrue([
+      for k, v in var.custom_roles : contains(
+        ["ALPHA", "BETA", "GA", "DEPRECATED", "DISABLED", "EAP"],
+        coalesce(v.stage, "GA")
+      )
+    ])
+    error_message = "Stage must be one of ALPHA, BETA, GA, DEPRECATED, DISABLED, EAP."
+  }
 }
 
 variable "factories_config" {
@@ -304,7 +332,7 @@ variable "organization_id" {
   description = "Organization id in organizations/nnnnnn format."
   type        = string
   validation {
-    condition     = can(regex("^organizations/[0-9]+", var.organization_id))
+    condition     = can(regex("^organizations/[0-9]+$", var.organization_id))
     error_message = "The organization_id must in the form organizations/nnn."
   }
 }

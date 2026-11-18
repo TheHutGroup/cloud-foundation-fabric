@@ -23,11 +23,18 @@ locals {
   ctx_p    = "$"
   location = lookup(local.ctx.locations, var.location, var.location)
   pool_id = try(
-    var.ca_pool_config.use_pool.id,
+    lookup(
+      local.ctx.ca_pools,
+      var.ca_pool_config.use_pool.id,
+      var.ca_pool_config.use_pool.id
+    ),
     google_privateca_ca_pool.default[0].id
   )
   pool_name  = reverse(split("/", local.pool_id))[0]
   project_id = lookup(local.ctx.project_ids, var.project_id, var.project_id)
+  publishing_options = try(
+    var.ca_pool_config.create_pool.publishing_options, null
+  )
 }
 
 resource "google_privateca_ca_pool" "default" {
@@ -41,6 +48,16 @@ resource "google_privateca_ca_pool" "default" {
     ? "ENTERPRISE"
     : "DEVOPS"
   )
+  dynamic "publishing_options" {
+    for_each = (
+      local.publishing_options == null ? [] : [local.publishing_options]
+    )
+    content {
+      encoding_format = publishing_options.value.encoding_format
+      publish_ca_cert = publishing_options.value.publish_ca_cert
+      publish_crl     = publishing_options.value.publish_crl
+    }
+  }
 }
 
 resource "google_privateca_certificate_authority" "default" {
@@ -50,7 +67,7 @@ resource "google_privateca_certificate_authority" "default" {
   project                  = local.project_id
   location                 = local.location
   type = (
-    each.value.is_self_signed == true
+    each.value.is_self_signed == true && each.value.subordinate_config == null
     ? "SELF_SIGNED"
     : "SUBORDINATE"
   )
@@ -130,7 +147,10 @@ resource "google_privateca_certificate_authority" "default" {
   dynamic "subordinate_config" {
     for_each = each.value.subordinate_config != null ? [1] : []
     content {
-      certificate_authority = each.value.subordinate_config.root_ca_id
+      certificate_authority = try(
+        local.ctx.ca_ids[each.value.subordinate_config.root_ca_id],
+        each.value.subordinate_config.root_ca_id
+      )
       dynamic "pem_issuer_chain" {
         for_each = (
           each.value.subordinate_config.pem_issuer_certificates != null

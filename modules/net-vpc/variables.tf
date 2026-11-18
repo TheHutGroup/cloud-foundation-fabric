@@ -20,6 +20,30 @@ variable "auto_create_subnetworks" {
   default     = false
 }
 
+variable "bgp_config" {
+  description = "Optional BGP path selection configuration."
+  type = object({
+    always_compare_med       = optional(bool)
+    best_path_selection_mode = optional(string)
+    inter_region_cost        = optional(string)
+  })
+  default = null
+  validation {
+    condition = (
+      try(var.bgp_config.best_path_selection_mode, null) == null ||
+      contains(["LEGACY", "STANDARD"], try(var.bgp_config.best_path_selection_mode, ""))
+    )
+    error_message = "best_path_selection_mode must be one of: LEGACY, STANDARD."
+  }
+  validation {
+    condition = (
+      try(var.bgp_config.inter_region_cost, null) == null ||
+      contains(["DEFAULT", "ADD_COST_TO_MED"], try(var.bgp_config.inter_region_cost, ""))
+    )
+    error_message = "inter_region_cost must be one of: DEFAULT, ADD_COST_TO_MED."
+  }
+}
+
 variable "context" {
   description = "Context-specific interpolations."
   type = object({
@@ -87,6 +111,16 @@ variable "factories_config" {
     internal_ranges_folder = optional(string)
   })
   default = {}
+}
+
+variable "firewall_policy_associations" {
+  description = "Network firewall policies to associate with this VPC, keyed by region or by `global` for the global policy. The association name defaults to the VPC name followed by the key. Manage each association from one side only, either here or via the `attachments` variable of the policy module, never both."
+  type = map(object({
+    name      = optional(string)
+    policy_id = string
+  }))
+  default  = {}
+  nullable = false
 }
 
 variable "firewall_policy_enforcement_order" {
@@ -212,6 +246,7 @@ variable "peering_config" {
 variable "policy_based_routes" {
   description = "Policy based routes, keyed by name."
   type = map(object({
+    name                = optional(string)
     description         = optional(string, "Terraform-managed.")
     labels              = optional(map(string))
     priority            = optional(number)
@@ -297,6 +332,7 @@ variable "psa_configs" {
 variable "routes" {
   description = "Network routes, keyed by name."
   type = map(object({
+    name          = optional(string)
     description   = optional(string, "Terraform-managed.")
     dest_range    = string
     next_hop_type = string # gateway, instance, ip, vpn_tunnel, ilb
@@ -435,7 +471,10 @@ variable "subnets" {
       for s in var.subnets :
       (
         length([
-          for field in [s.ip_cidr_range, s.reserved_internal_range, s.ip_collection] :
+          for field in [
+            try(coalesce(s.ip_cidr_range, s.reserved_internal_range), null),
+            s.ip_collection
+          ] :
           field if field != null
         ]) == 1
         ) || (
@@ -445,17 +484,17 @@ variable "subnets" {
         ]) == 0 && try(s.ipv6.ipv6_only, false) == true
       )
     ])
-    error_message = "Each subnet must specify exactly one of ip_cidr_range, reserved_internal_range, or ip_collection, or all three can be null for IPv6-only subnets (ipv6.ipv6_only = true)."
+    error_message = "Each subnet must specify ip_cidr_range and/or reserved_internal_range, or ip_collection, or all three can be null for IPv6-only subnets (ipv6.ipv6_only = true)."
   }
   validation {
     condition = alltrue([
       for s in var.subnets :
       s.secondary_ip_ranges == null || alltrue([
         for range_name, range_config in coalesce(s.secondary_ip_ranges, {}) :
-        (range_config.ip_cidr_range != null) != (range_config.reserved_internal_range != null)
+        range_config.ip_cidr_range != null || range_config.reserved_internal_range != null
       ])
     ])
-    error_message = "Each secondary IP range must specify either ip_cidr_range or reserved_internal_range, but not both."
+    error_message = "Each secondary IP range must specify ip_cidr_range and/or reserved_internal_range."
   }
 }
 
@@ -466,6 +505,14 @@ variable "subnets_private_nat" {
     ip_cidr_range = string
     region        = string
     description   = optional(string)
+    flow_logs_config = optional(object({
+      aggregation_interval = optional(string)
+      filter_expression    = optional(string)
+      flow_sampling        = optional(number)
+      metadata             = optional(string)
+      # only if metadata == "CUSTOM_METADATA"
+      metadata_fields = optional(list(string))
+    }))
   }))
   default  = []
   nullable = false

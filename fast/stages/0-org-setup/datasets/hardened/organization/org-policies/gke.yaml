@@ -90,17 +90,9 @@ custom.gkeDisableKubernetesDashboard:
   rules:
     - enforce: true
 
-custom.gkeDisableLegacyAbac:
-  rules:
-    - enforce: true
-
 custom.gkeDisableLegacyMetadataEndpoints:
   rules:
     - enforce: true
-
-# custom.gkeRequireConfidentialNodes:
-#   rules:
-#     - enforce: true
 
 custom.gkeRequireCOSImage:
   rules:
@@ -110,17 +102,13 @@ custom.gkeRequireDataplaneV2:
   rules:
     - enforce: true
 
-custom.gkeRequireGKEMetadataServer:
-  rules:
-    - enforce: true
-
-custom.gkeRequireIntegrityMonitoring:
-  rules:
-    - enforce: true
-
 custom.gkeRequireIntraNodeVisibility:
   rules:
     - enforce: true
+
+# custom.gkeRequireMaintenanceWindow:
+#   rules:
+#     - enforce: true
 
 custom.gkeRequireMasterAuthorizedNetworks:
   rules:
@@ -138,9 +126,9 @@ custom.gkeRequireNodePoolAutoUpgrade:
   rules:
     - enforce: true
 
-custom.gkeRequireNodePoolCMEKEncryption:
-  rules:
-    - enforce: true
+# custom.gkeRequireNodePoolAutoscaling:
+#   rules:
+#     - enforce: true
 
 custom.gkeRequireNodePoolSandbox:
   rules:
@@ -155,6 +143,10 @@ custom.gkeRequireRegionalClusters:
     - enforce: true
 
 custom.gkeRequireSecureBoot:
+  rules:
+    - enforce: true
+
+custom.gkeRequireSecurityPosture:
   rules:
     - enforce: true
 

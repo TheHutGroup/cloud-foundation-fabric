@@ -21,8 +21,11 @@ tests:
   context:
     extra_dirs:
       - ../../tests/modules/organization/factory-caa
+  custom_roles:
   iam_by_principals_additive:
   iam_by_principals_conditional:
+  model_armor_nulls:
+  model_armor_sdp_templates:
   org_policies:
   org_policies_factory:
     inventory:
@@ -32,3 +35,6 @@ tests:
   tags:
   tags_force_context:
   tags_skip_iam:
+  wfif_client_secret_path:
+    extra_dirs:
+      - ../../tests/modules/organization/wfif-secret

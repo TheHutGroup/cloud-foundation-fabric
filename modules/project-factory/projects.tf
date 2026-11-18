@@ -15,6 +15,7 @@
  */
 
 # TODO: add project sa to context
+# TODO: support referencing project numbers / workload_identity_pools in principalSet IAM members via context
 
 locals {
   # project data from folders tree
@@ -84,10 +85,10 @@ locals {
   project_ids = {
     for k, v in module.projects : k => v.project_id
   }
+  projects_input = local._projects_output
   project_numbers = {
     for k, v in module.projects : k => v.number
   }
-  projects_input = merge(var.projects, local._projects_output)
   projects_service_agents = merge([
     for k, v in module.projects : {
       for kk, vv in v.service_agents : "service_agents/${k}/${kk}" => vv.iam_email
@@ -139,17 +140,18 @@ module "projects" {
     })
     folder_ids = local.ctx_folder_ids
   })
+  custom_roles            = each.value.custom_roles
   default_service_account = try(each.value.default_service_account, "keep")
   # Exclude factories that are either:
   # a) Handled in parallel by calling specific modules (e.g., aspect_types, data_catalog_taxonomy)
-  # b) Handled in the projects-iam call to leverage expanded context (e.g., org_policies)
+  # b) Handled in the projects-iam call to leverage expanded context (e.g., org_policies, pam_entitlements)
   factories_config = {
     for k, v in each.value.factories_config : k => try(pathexpand(
       var.factories_config.basepath == null || startswith(v, "/") || startswith(v, ".")
       ? v :
       "${var.factories_config.basepath}/${v}"
     ), null)
-    if !contains(["aspect_types", "data_catalog_taxonomy", "org_policies"], k)
+    if !contains(["aspect_types", "data_catalog_taxonomy", "org_policies", "pam_entitlements"], k)
   }
   kms_autokeys = try(each.value.kms.autokeys, {})
   labels = merge(
@@ -199,6 +201,7 @@ module "projects-iam" {
       services_enabled = module.projects[each.key].services
     }
   }
+  cloud_armor_policy = lookup(each.value, "cloud_armor_policy", null)
   context = merge(local.ctx, {
     condition_vars = merge(
       local.ctx.condition_vars, {
@@ -208,6 +211,8 @@ module "projects-iam" {
         projects = {
           for k, v in module.projects : k => v.project_id
         }
+        tag_keys   = local.ctx_tag_keys
+        tag_values = local.ctx_tag_values
       }
     )
     tag_vars = {
@@ -235,12 +240,12 @@ module "projects-iam" {
   })
   factories_config = {
     # we do anything that can refer to IAM and custom roles in this call
-    pam_entitlements = try(each.value.factories_config.pam_entitlements, null)
-    org_policies = lookup(each.value.factories_config, "org_policies", null) == null ? null : try(pathexpand(
-      var.factories_config.basepath == null || startswith(each.value.factories_config.org_policies, "/") || startswith(each.value.factories_config.org_policies, ".")
-      ? each.value.factories_config.org_policies :
-      "${var.factories_config.basepath}/${each.value.factories_config.org_policies}"
+    for k, v in each.value.factories_config : k => try(pathexpand(
+      var.factories_config.basepath == null || startswith(v, "/") || startswith(v, ".")
+      ? v :
+      "${var.factories_config.basepath}/${v}"
     ), null)
+    if contains(["org_policies", "pam_entitlements"], k)
   }
   iam                           = lookup(each.value, "iam", {})
   iam_bindings                  = lookup(each.value, "iam_bindings", {})
@@ -252,6 +257,9 @@ module "projects-iam" {
   metric_scopes = distinct(concat(
     each.value.metric_scopes, var.data_merges.metric_scopes
   ))
+  model_armor_floor_setting = lookup(
+    each.value, "model_armor_floor_setting", null
+  )
   pam_entitlements = try(each.value.pam_entitlements, {})
   # The second pass handles the authoritative cloudservices editor binding.
   # We disable primary agents creation and default roles here because they
@@ -261,6 +269,12 @@ module "projects-iam" {
     grant_default_roles        = false
     grant_service_agent_editor = each.value.service_agents_config.grant_service_agent_editor
   }
+  service_agents_folder_bindings = try(
+    each.value.service_agents_folder_bindings, {}
+  )
+  service_agents_project_bindings = try(
+    each.value.service_agents_project_bindings, {}
+  )
   service_encryption_key_ids = merge(
     each.value.service_encryption_key_ids,
     var.data_merges.service_encryption_key_ids

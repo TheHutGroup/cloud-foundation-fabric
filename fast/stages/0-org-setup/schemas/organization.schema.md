@@ -95,6 +95,32 @@
       - **filter**: *string*
       - **type**: *string*
         <br>*default: logging*, *enum: ['bigquery', 'logging', 'project', 'pubsub', 'storage']*
+- **model_armor_floor_setting**: *object*
+  <br>*additional properties: false*
+  - **enforce**: *boolean*
+  - **multi_language_detection**: *boolean*
+  - ⁺**filters**: *object*
+    <br>*additional properties: false*
+    - **malicious_uris**: *boolean*
+    - **pi_and_jailbreak**: *object*
+      <br>*additional properties: false*
+      - **confidence_level**: *string*
+        <br>*enum: ['LOW_AND_ABOVE', 'MEDIUM_AND_ABOVE', 'HIGH']*
+    - **rai**: *object*
+      <br>*additional properties: false*
+      - **DANGEROUS**: *string*
+        <br>*enum: ['LOW_AND_ABOVE', 'MEDIUM_AND_ABOVE', 'HIGH']*
+      - **HARASSMENT**: *string*
+        <br>*enum: ['LOW_AND_ABOVE', 'MEDIUM_AND_ABOVE', 'HIGH']*
+      - **HATE_SPEECH**: *string*
+        <br>*enum: ['LOW_AND_ABOVE', 'MEDIUM_AND_ABOVE', 'HIGH']*
+      - **SEXUALLY_EXPLICIT**: *string*
+        <br>*enum: ['LOW_AND_ABOVE', 'MEDIUM_AND_ABOVE', 'HIGH']*
+    - **sdp**: *object*
+      <br>*additional properties: false*
+      - **basic**: *boolean*
+      - **inspect_template**: *string*
+      - **deidentify_template**: *string*
 - **org_policies**: *object*
   <br>*additional properties: false*
   - **`^[a-z]+\.`**: *object*
@@ -279,7 +305,11 @@
   <br>*additional properties: false*
   - ⁺**issuer_uri**: *string*
   - ⁺**client_id**: *string*
-  - ⁺**client_secret**: *string*
+  - ⁺**client_secret**: *object*
+    <br>*additional properties: false*
+    - **value**: *string*
+    - **path**: *string*
+    - **wo_version**: *number*
   - **attributes_type**: *string*
     <br>*enum: ['AZURE_AD_GROUPS_MAIL', 'AZURE_AD_GROUPS_ID']*
   - **query_filter**: *string*

@@ -128,7 +128,7 @@ variable "assured_workload_config" {
     error_message = "Field assured_workload_config.compliance_regime must be one of the values listed in https://cloud.google.com/assured-workloads/docs/reference/rest/Shared.Types/ComplianceRegime"
   }
   validation {
-    condition = try(contains([
+    condition = try(var.assured_workload_config.partner == null || contains([
       "LOCAL_CONTROLS_BY_S3NS",
       "PARTNER_UNSPECIFIED",
       "SOVEREIGN_CONTROLS_BY_CNTXT_NO_EKM",
@@ -137,7 +137,7 @@ variable "assured_workload_config" {
       "SOVEREIGN_CONTROLS_BY_SIA_MINSAIT",
       "SOVEREIGN_CONTROLS_BY_T_SYSTEMS",
     ], var.assured_workload_config.partner), true)
-    error_message = "Field assured_workload_config.partner must be one of the values listed in https://cloud.google.com/assured-workloads/docs/reference/rest/Shared.Types/Partner"
+    error_message = "Field assured_workload_config.partner must be null or one of the values listed in https://cloud.google.com/assured-workloads/docs/reference/rest/Shared.Types/Partner"
   }
 }
 
@@ -148,6 +148,23 @@ variable "autokey_config" {
   })
   nullable = true
   default  = null
+}
+
+variable "cloud_armor_policy" {
+  description = "Hierarchical Cloud Armor policy to associate to this folder, excluded projects use the `projects/nnn` (project number) format or `$project_numbers:` context references. Folders can only be excluded from organization-level associations. The association name defaults to `folder-<id>`. The policy id accepts `$security_policies:` context references. Manage each association either here or via the `attachments` variable of the `net-cloud-armor` module, not both."
+  type = object({
+    name              = optional(string)
+    policy_id         = string
+    excluded_folders  = optional(list(string), [])
+    excluded_projects = optional(list(string), [])
+  })
+  default = null
+  validation {
+    condition = (
+      length(try(var.cloud_armor_policy.excluded_folders, [])) == 0
+    )
+    error_message = "Folders can only be excluded from organization-level Cloud Armor policy associations."
+  }
 }
 
 variable "contacts" {
@@ -183,6 +200,7 @@ variable "context" {
     project_ids       = optional(map(string), {})
     project_numbers   = optional(map(string), {})
     pubsub_topics     = optional(map(string), {})
+    security_policies = optional(map(string), {})
     storage_buckets   = optional(map(string), {})
     tag_values        = optional(map(string), {})
     tag_vars = optional(object({

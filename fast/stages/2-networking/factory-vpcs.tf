@@ -52,10 +52,6 @@ locals {
         psa_configs                       = try(v.psa_configs, [])
         routes                            = try(v.routes, {})
         routing_mode                      = try(v.routing_mode, "GLOBAL")
-        subnets_private_nat               = try(v.subnets_private_nat, [])
-        subnets_proxy_only                = try(v.subnets_proxy_only, [])
-        subnets_psc                       = try(v.subnets_psc, [])
-        subnets                           = try(v.subnets, [])
         subnets_factory_config = {
           subnets_folder = try(
             startswith(v.factories_config.subnets, "/") || startswith(v.factories_config.subnets, ".") ? v.factories_config.subnets :
@@ -82,10 +78,16 @@ locals {
     names      = { for k, v in module.vpc-factory.vpcs : k => v.name }
     self_links = { for k, v in module.vpc-factory.vpcs : k => v.self_link }
     subnets_by_vpc = merge([
-      for vpc_key, vpc in module.vpc-factory.vpcs : {
-        for subnet_key, subnet_self_link in vpc.subnet_self_links :
-        "${vpc_key}/${subnet_key}" => subnet_self_link
-      }
+      for vpc_key, vpc in module.vpc-factory.vpcs : merge(
+        {
+          for subnet_key, subnet_self_link in vpc.subnet_self_links :
+          "${vpc_key}/${subnet_key}" => subnet_self_link
+        },
+        {
+          for subnet_key, subnet in vpc.subnets_private_nat :
+          "${vpc_key}/${subnet_key}" => subnet.self_link
+        }
+      )
     ]...)
   }
 }
@@ -101,16 +103,27 @@ moved {
 }
 
 module "vpc-factory" {
-  source         = "../../../modules/net-vpc-factory"
-  data_defaults  = local.vpc_defaults.defaults
-  data_overrides = local.vpc_defaults.overrides
+  source        = "../../../modules/net-vpc-factory"
+  data_defaults = local.vpc_defaults.defaults
+  # routes and policy based routes are suppressed here and managed in a
+  # second pass via module.vpc-routes, so that next hops can resolve NVA
+  # ILB addresses created after the VPCs
+  data_overrides = merge(local.vpc_defaults.overrides, {
+    policy_based_routes = {}
+    routes              = {}
+  })
   factories_config = {
     basepath = var.factories_config.dataset
     paths    = var.factories_config.paths
   }
   context = {
-    project_ids = local.ctx_projects.project_ids
-    locations   = local.ctx.locations
+    addresses        = local.ctx.addresses
+    cidr_ranges      = local.ctx.cidr_ranges
+    cidr_ranges_sets = local.ctx.cidr_ranges_sets
+    custom_roles     = local.ctx.custom_roles
+    iam_principals   = local.ctx.iam_principals
+    locations        = local.ctx.locations
+    project_ids      = local.ctx_projects.project_ids
   }
 }
 
@@ -126,13 +139,19 @@ module "vpc-routes" {
     use_data_source = false
     attributes      = { network_id = module.vpc-factory.vpcs[each.key].network_id }
   }
-  project_id = each.value.project_id
-  name       = each.value.name
-  routes     = try(each.value.routes, {})
+  project_id          = each.value.project_id
+  name                = each.value.name
+  policy_based_routes = try(each.value.policy_based_routes, {})
+  routes              = try(each.value.routes, {})
   context = {
-    project_ids = local.ctx_projects.project_ids
+    addresses = merge(
+      local.ctx.addresses,
+      local.ctx_addresses.internal,
+      local.ctx_nva.ilb_addresses
+    )
+    cidr_ranges = local.ctx.cidr_ranges
     locations   = local.ctx.locations
-    addresses   = local.ctx_nva.ilb_addresses
+    project_ids = local.ctx_projects.project_ids
   }
   depends_on = [
     module.projects,

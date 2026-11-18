@@ -130,16 +130,16 @@ values:
     remote_traffic_selector:
     - 0.0.0.0/0
     router: null
-    shared_secret: mysecret
+    shared_secret: null
     shared_secret_wo: null
-    shared_secret_wo_version: null
+    shared_secret_wo_version: '1'
     terraform_labels:
       goog-terraform-provisioned: 'true'
     timeouts: null
     vpn_gateway: null
     vpn_gateway_interface: null
   module.vpn.random_id.secret:
-    byte_length: 8
+    byte_length: 16
     keepers: null
     prefix: null
 

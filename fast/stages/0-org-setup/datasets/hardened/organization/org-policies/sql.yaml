@@ -18,7 +18,19 @@
 
 # yaml-language-server: $schema=../../../../schemas/org-policies.schema.json
 
-custom.cloudsqlDisablePublicAuthorizedNetworks:
+custom.cloudsqlDisablePostgreSQLLogHostnameFlag:
+  rules:
+    - enforce: true
+
+custom.cloudsqlDisablePostgreSQLLogParserStatsFlag:
+  rules:
+    - enforce: true
+
+custom.cloudsqlDisablePostgreSQLLogPlannerStatsFlag:
+  rules:
+    - enforce: true
+
+custom.cloudsqlDisablePostgreSQLLogStatementStatsFlag:
   rules:
     - enforce: true
 
@@ -33,6 +45,10 @@ custom.cloudsqlRequireAutomatedBackup:
 custom.cloudsqlRequireHighAvailability:
   rules:
     - enforce: true
+
+# custom.cloudsqlRequireMaintenanceWindow:
+#   rules:
+#     - enforce: true
 
 custom.cloudsqlRequireMySQLDatabaseFlags:
   rules:
@@ -50,6 +66,14 @@ custom.cloudsqlRequirePostgreSQLDatabaseFlags:
   rules:
     - enforce: true
 
+custom.cloudsqlRequirePostgreSQLLogDurationFlag:
+  rules:
+    - enforce: true
+
+custom.cloudsqlRequirePostgreSQLLogTempFilesFlag:
+  rules:
+    - enforce: true
+
 custom.cloudsqlRequireRootPassword:
   rules:
     - enforce: true
@@ -62,10 +86,10 @@ custom.cloudsqlRequireSSLConnection:
   rules:
     - enforce: true
 
-sql.restrictAuthorizedNetworks:
+sql.managed.restrictAuthorizedNetworks:
   rules:
     - enforce: true
 
-sql.restrictPublicIp:
+sql.managed.restrictPublicIp:
   rules:
     - enforce: true

@@ -15,6 +15,8 @@
  */
 
 locals {
+  project_id = var.project_id
+  region     = var.region
   peer_gateway_id = (
     var.peer_gateway_config.create
     ? try(google_compute_external_vpn_gateway.default[0].id, null)
@@ -26,7 +28,17 @@ locals {
     : var.router_config.name
   )
   secret = random_id.default.b64_url
-
+  shared_secrets = {
+    for k, v in var.tunnels : k => (
+      v.shared_secret == null
+      ? local.secret
+      : (
+        v.shared_secret.path == null
+        ? v.shared_secret.value
+        : file(pathexpand(v.shared_secret.path))
+      )
+    )
+  }
 }
 
 resource "google_compute_ha_vpn_gateway" "default" {
@@ -97,6 +109,8 @@ resource "google_compute_router_peer" "default" {
   router                    = local.router
   peer_ip_address           = each.value.bgp_peer.address
   peer_asn                  = each.value.bgp_peer.asn
+  export_policies           = each.value.bgp_peer.export_policies
+  import_policies           = each.value.bgp_peer.import_policies
   advertised_route_priority = each.value.bgp_peer.route_priority
   advertise_mode = (
     try(each.value.bgp_peer.custom_advertise, null) != null
@@ -125,7 +139,8 @@ resource "google_compute_router_peer" "default" {
     }
   }
 
-  interface = google_compute_router_interface.default[each.key].name
+  interface  = google_compute_router_interface.default[each.key].name
+  depends_on = [google_compute_router_route_policy.default]
 }
 
 resource "google_compute_router_interface" "default" {
@@ -139,13 +154,23 @@ resource "google_compute_router_interface" "default" {
 }
 
 resource "google_compute_vpn_tunnel" "default" {
-  for_each                        = var.tunnels
-  project                         = var.project_id
-  region                          = var.region
-  name                            = "${var.name}-${each.key}"
-  vpn_gateway                     = google_compute_ha_vpn_gateway.default.id
-  peer_external_gateway           = local.peer_gateway_id
-  shared_secret                   = coalesce(each.value.shared_secret, local.secret)
+  for_each              = var.tunnels
+  project               = var.project_id
+  region                = var.region
+  name                  = "${var.name}-${each.key}"
+  vpn_gateway           = google_compute_ha_vpn_gateway.default.id
+  peer_external_gateway = local.peer_gateway_id
+  shared_secret = (
+    try(each.value.shared_secret.wo_version, null) != null
+    ? null
+    : local.shared_secrets[each.key]
+  )
+  shared_secret_wo = (
+    try(each.value.shared_secret.wo_version, null) == null
+    ? null
+    : local.shared_secrets[each.key]
+  )
+  shared_secret_wo_version        = try(each.value.shared_secret.wo_version, null)
   router                          = local.router
   vpn_gateway_interface           = each.value.vpn_gateway_interface
   peer_external_gateway_interface = each.value.peer_external_gateway_interface
@@ -153,5 +178,5 @@ resource "google_compute_vpn_tunnel" "default" {
 }
 
 resource "random_id" "default" {
-  byte_length = 8
+  byte_length = 16
 }

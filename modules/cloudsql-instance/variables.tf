@@ -104,6 +104,13 @@ variable "databases" {
   default     = null
 }
 
+variable "disk_autoresize" {
+  description = "Enable automatic disk resize, capped by disk_autoresize_limit."
+  type        = bool
+  default     = true
+  nullable    = false
+}
+
 variable "disk_autoresize_limit" {
   description = "The maximum size to which storage capacity can be automatically increased. The default value is 0, which specifies that there is no limit."
   type        = number
@@ -111,7 +118,7 @@ variable "disk_autoresize_limit" {
 }
 
 variable "disk_size" {
-  description = "Disk size in GB. Set to null to enable autoresize."
+  description = "Disk size in GB. Acts as the initial minimum size when disk_autoresize is true, or a fixed size when disk_autoresize is false."
   type        = number
   default     = null
 }
@@ -126,6 +133,12 @@ variable "edition" {
   description = "The edition of the instance, can be ENTERPRISE or ENTERPRISE_PLUS."
   type        = string
   default     = "ENTERPRISE"
+}
+
+variable "enable_dataplex_integration" {
+  description = "Enable Dataplex integration to publish database metadata to Knowledge Catalog. Only applied to the primary instance; unset means disabled."
+  type        = bool
+  default     = null
 }
 
 variable "encryption_key_name" {
@@ -230,12 +243,16 @@ variable "network_config" {
       }))
       psc_allowed_consumer_projects = optional(list(string)) # OBSOLETE. See validation below.
       psc_config = optional(object({
-        allowed_consumer_projects = optional(list(string))
-        network_attachment_uri    = optional(string)
+        allowed_consumer_projects          = optional(list(string))
+        network_attachment_uri             = optional(string)
+        psc_auto_connection_policy_enabled = optional(bool)
         psc_auto_connections = optional(list(object({
           consumer_network            = string
           consumer_service_project_id = optional(string)
         })))
+        psc_auto_dns_enabled = optional(bool)
+        # only supported for ENTERPRISE_PLUS primary instances
+        psc_write_endpoint_dns_enabled = optional(bool)
       }))
       enable_private_path_for_services = optional(bool, false)
     })

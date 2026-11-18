@@ -27,13 +27,13 @@ locals {
   _defaults = yamldecode(file(local.paths.defaults))
   # provide sane VPC defaults
   _vpc_defaults = {
-    auto_create_subnetworks        = false
-    delete_default_route_on_create = true
-    mtu                            = 1500
+    auto_create_subnetworks         = false
+    delete_default_routes_on_create = true
+    mtu                             = 1500
   }
   ctx = merge(local._ctx, {
     custom_roles = merge(var.custom_roles, local._ctx.custom_roles)
-    folder_ids   = merge(var.folder_ids, var.context.folder_ids)
+    folder_ids   = merge(var.folder_ids, local._ctx.folder_ids)
     iam_principals = merge(
       var.iam_principals,
       {
@@ -42,8 +42,13 @@ locals {
       },
       local._ctx.iam_principals
     )
-    kms_keys        = merge(var.kms_keys, local._ctx.kms_keys)
-    project_ids     = merge(var.project_ids, local._ctx.project_ids)
+    kms_keys = merge(var.kms_keys, local._ctx.kms_keys)
+    project_ids = merge(
+      var.project_ids, local._ctx.project_ids
+    )
+    security_profile_groups = merge(
+      var.security_profile_groups, local._ctx.security_profile_groups
+    )
     storage_buckets = merge(var.storage_buckets, local._ctx.storage_buckets)
     tag_keys        = merge(var.tag_keys, local._ctx.tag_keys)
     tag_values      = merge(var.tag_values, local._ctx.tag_values)

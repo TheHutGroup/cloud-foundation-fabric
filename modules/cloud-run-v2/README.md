@@ -17,12 +17,15 @@ Cloud Run Services and Jobs, with support for IAM roles and Eventarc trigger cre
   - [GCS bucket](#gcs-bucket)
 - [Cloud Run Invoker IAM Disable](#cloud-run-invoker-iam-disable)
 - [Cloud Run Service Account](#cloud-run-service-account)
+  - [Workload and agent identities](#workload-and-agent-identities)
 - [Creating Cloud Run Jobs](#creating-cloud-run-jobs)
 - [Tag bindings](#tag-bindings)
 - [IAP Configuration](#iap-configuration)
 - [Adding GPUs](#adding-gpus)
 - [Multi-Region Service](#multi-region-service)
-- [Service-level maximum instances](#service-level-maximum-instances)
+- [Traffic Splitting and Revision Tagging](#traffic-splitting-and-revision-tagging)
+- [Service-level Scaling](#service-level-scaling)
+- [Security Configurations](#security-configurations)
 - [Variables](#variables)
 - [Outputs](#outputs)
 - [Fixtures](#fixtures)
@@ -499,7 +502,9 @@ module "secrets" {
       }
       versions = {
         v1 = {
-          data = file("${path.module}/config/otel-config.yaml")
+          data = {
+            value = file("${path.module}/config/otel-config.yaml")
+          }
         }
       }
     }
@@ -748,6 +753,34 @@ module "cloud_run" {
   deletion_protection = false
 }
 # tftest fixtures=fixtures/iam-service-account.tf inventory=service-external-sa.yaml e2e
+```
+
+### Workload and agent identities
+
+Services can run under a Cloud Run managed identity instead of a service account, via `service_config.workload_identity_config`. This is what [Agent Platform](https://cloud.google.com/run/docs/ai/agent-platform-features) features build on: a workload with identity type `IDENTITY_TYPE_AGENT_IDENTITY` is assigned a system-managed SPIFFE identity and registered in the Agent Registry.
+
+When identity type is not `IDENTITY_TYPE_SERVICE_ACCOUNT` the module creates no service account and binds no roles, as there is no service account to bind them to. Cloud Run does not expose the resolved principal as an attribute, so roles for the managed identity need to be granted outside this module.
+
+```hcl
+module "cloud_run" {
+  source     = "./fabric/modules/cloud-run-v2"
+  project_id = var.project_id
+  region     = var.region
+  name       = "example-agent"
+  containers = {
+    hello = {
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+    }
+  }
+  service_config = {
+    workload_identity_config = {
+      certificate_enabled = true
+      identity_type       = "IDENTITY_TYPE_AGENT_IDENTITY"
+    }
+  }
+  deletion_protection = false
+}
+# tftest inventory=service-agent-identity.yaml
 ```
 
 ## Creating Cloud Run Jobs
@@ -1002,16 +1035,52 @@ module "cloud_run" {
 }
 # tftest inventory=multiregion.yaml
 ```
-## Service-level maximum instances
 
-`service_config.scaling.max_instance_count` only sets the revision-level cap (`template.scaling`). Cloud Run also keeps a service-level cap (`Service.scaling.maxInstanceCount`, shown as `run.googleapis.com/maxScale` on the service) that is fixed when the service is first created and is not touched by later template updates, so a raised `max_instance_count` never takes effect on an existing service. Set `service_max_instance_count` to manage that cap too; the effective limit is the lower of the two, so passing the same value keeps them in step.
+## Traffic Splitting and Revision Tagging
 
 ```hcl
 module "cloud_run" {
   source     = "./fabric/modules/cloud-run-v2"
   project_id = var.project_id
   region     = var.region
-  name       = "hello"
+  name       = "example-traffic"
+  containers = {
+    hello = {
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+    }
+  }
+  service_config = {
+    traffic = [
+      {
+        percent  = 90
+        revision = "example-traffic-v1"
+        type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+      },
+      {
+        percent  = 10
+        revision = "example-traffic-v2"
+        tag      = "candidate"
+        type     = "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+      }
+    ]
+  }
+  deletion_protection = false
+}
+# tftest inventory=traffic.yaml
+```
+
+## Service-level Scaling
+
+`service_config.scaling` sets the revision-level scaling limits. Cloud Run also enforces service-level limits, which apply to all revisions receiving traffic combined, and uses the lesser of the two maximums. As the service-level maximum defaults to 100 instances, set it via `service_config.service_scaling` to scale beyond that limit. Manual scaling is configured by setting `mode` to `MANUAL` together with `manual_instance_count`.
+
+The THG fork also accepts `service_config.scaling.service_max_instance_count` as a fallback for `service_scaling.max_instance_count`; `service_scaling` wins when both are set.
+
+```hcl
+module "cloud_run" {
+  source     = "./fabric/modules/cloud-run-v2"
+  project_id = var.project_id
+  region     = var.region
+  name       = "example-scaling"
   containers = {
     hello = {
       image = "us-docker.pkg.dev/cloudrun/container/hello"
@@ -1019,39 +1088,70 @@ module "cloud_run" {
   }
   service_config = {
     scaling = {
-      max_instance_count         = 50
-      service_max_instance_count = 50
+      max_instance_count = 150
+      min_instance_count = 3
+    }
+    service_scaling = {
+      max_instance_count = 150
+      min_instance_count = 3
     }
   }
   deletion_protection = false
 }
-# tftest skip
+# tftest inventory=service-scaling.yaml e2e
+```
+
+## Security Configurations
+
+You can enable Binary Authorization to verify container image signatures and disable the default `*.a.run.app` URL when routing traffic exclusively through internal networks or Application Load Balancers:
+
+```hcl
+module "cloud_run" {
+  source     = "./fabric/modules/cloud-run-v2"
+  project_id = var.project_id
+  region     = var.region
+  name       = "example-security"
+  containers = {
+    hello = {
+      image = "us-docker.pkg.dev/cloudrun/container/hello"
+    }
+  }
+  binary_authorization = {
+    use_default = true
+  }
+  service_config = {
+    default_uri_disabled = true
+  }
+  deletion_protection = false
+}
+# tftest inventory=security.yaml
 ```
 <!-- BEGIN TFDOC -->
 ## Variables
 
 | name | description | type | required | default |
 |---|---|:---:|:---:|:---:|
-| [name](variables.tf#L182) | Name used for Cloud Run service. | <code>string</code> | ✓ |  |
-| [project_id](variables.tf#L187) | Project id used for all resources. | <code>string</code> | ✓ |  |
-| [region](variables.tf#L192) | Region used for all resources. | <code>string</code> | ✓ |  |
-| [containers](variables.tf#L17) | Containers in name => attributes format. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [context](variables.tf#L97) | Context-specific interpolations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [deletion_protection](variables.tf#L119) | Deletion protection setting for this Cloud Run service. | <code>string</code> |  | <code>null</code> |
-| [encryption_key](variables.tf#L125) | The full resource name of the Cloud KMS CryptoKey. | <code>string</code> |  | <code>null</code> |
-| [iam](variables.tf#L131) | IAM bindings for Cloud Run service in {ROLE => [MEMBERS]} format. | <code>map&#40;list&#40;string&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [job_config](variables.tf#L137) | Cloud Run Job specific configuration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [labels](variables.tf#L152) | Resource labels. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
-| [launch_stage](variables.tf#L158) | The launch stage as defined by Google Cloud Platform Launch Stages. | <code>string</code> |  | <code>null</code> |
-| [managed_revision](variables.tf#L175) | Whether the Terraform module should control the deployment of revisions. | <code>bool</code> |  | <code>true</code> |
-| [revision](variables.tf#L197) | Revision template configurations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [name](variables.tf#L192) | Name used for Cloud Run service. | <code>string</code> | ✓ |  |
+| [project_id](variables.tf#L197) | Project id used for all resources. | <code>string</code> | ✓ |  |
+| [region](variables.tf#L202) | Region used for all resources. | <code>string</code> | ✓ |  |
+| [binary_authorization](variables.tf#L17) | Binary Authorization configuration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>null</code> |
+| [containers](variables.tf#L27) | Containers in name => attributes format. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [context](variables.tf#L107) | Context-specific interpolations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [deletion_protection](variables.tf#L129) | Deletion protection setting for this Cloud Run service. | <code>string</code> |  | <code>null</code> |
+| [encryption_key](variables.tf#L135) | The full resource name of the Cloud KMS CryptoKey. | <code>string</code> |  | <code>null</code> |
+| [iam](variables.tf#L141) | IAM bindings for Cloud Run service in {ROLE => [MEMBERS]} format. | <code>map&#40;list&#40;string&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [job_config](variables.tf#L147) | Cloud Run Job specific configuration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [labels](variables.tf#L162) | Resource labels. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
+| [launch_stage](variables.tf#L168) | The launch stage as defined by Google Cloud Platform Launch Stages. | <code>string</code> |  | <code>null</code> |
+| [managed_revision](variables.tf#L185) | Whether the Terraform module should control the deployment of revisions. | <code>bool</code> |  | <code>true</code> |
+| [revision](variables.tf#L207) | Revision template configurations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [service_account_config](variables-serviceaccount.tf#L17) | Service account configurations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [service_config](variables.tf#L264) | Cloud Run service specific configuration options. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [tag_bindings](variables.tf#L331) | Tag bindings for this service, in key => tag value id format. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
-| [type](variables.tf#L338) | Type of Cloud Run resource to deploy: JOB, SERVICE or WORKERPOOL. | <code>string</code> |  | <code>&#34;SERVICE&#34;</code> |
-| [volumes](variables.tf#L348) | Named volumes in containers in name => attributes format. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [service_config](variables.tf#L274) | Cloud Run service specific configuration options. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [tag_bindings](variables.tf#L424) | Tag bindings for this service, in key => tag value id format. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
+| [type](variables.tf#L431) | Type of Cloud Run resource to deploy: JOB, SERVICE or WORKERPOOL. | <code>string</code> |  | <code>&#34;SERVICE&#34;</code> |
+| [volumes](variables.tf#L441) | Named volumes in containers in name => attributes format. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [vpc_connector_create](variables-vpcconnector.tf#L17) | VPC connector network configuration. Must be provided if new VPC connector is being created. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>null</code> |
-| [workerpool_config](variables.tf#L382) | Cloud Run Worker Pool specific configuration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [workerpool_config](variables.tf#L475) | Cloud Run Worker Pool specific configuration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
 
 ## Outputs
 

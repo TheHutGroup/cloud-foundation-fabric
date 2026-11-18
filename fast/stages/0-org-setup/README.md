@@ -48,7 +48,7 @@ This stage implements a flexible approach to organization bootstrapping and reso
 
 It heavily relies on a new [project factory module](../../../modules/project-factory/) for folder and project configurations, and leverages a new approach to [context-based interpolation](../../../modules/project-factory/README.md#context-based-interpolation) that allows writing legible, portable YAML definitions.
 
-The default set of YAML configuration files in the `data` folder mirrors the traditional FAST layout, and implements full compatibility with existing FAST stages like VPC-SC, security, networking, etc.
+The default set of YAML configuration files in the `datasets/classic` folder mirrors the traditional FAST layout, and implements full compatibility with existing FAST stages like VPC-SC, security, networking, etc.
 
 The default configuration can be used as a starting point for radically different Landing Zone designs, or it can be trimmed down to the bare minimum required for a secure, organization-level configuration with a working project factory.
 
@@ -57,8 +57,8 @@ The default configuration can be used as a starting point for radically differen
 The high-level flow for running this stage is:
 
 - ensure all **pre-requisites** are in place, and identify at least one GCP organization admin principal (ideally a group)
-- select the **factory data set** for the factories among those available - populate the **defaults file** with attributes matching your configuration (organization id, billing account, etc.)
-(`data`, `data-minimal`, etc.) or edit/create your own
+- select the **factory data set** for the factories among those available (`datasets/classic`, `datasets/hardened`, etc.) or edit/create your own
+- populate the **defaults file** with attributes matching your configuration (organization id, billing account, etc.)
 - assign a set of **initial IAM roles** to the admin principal
 - run a **first init/apply cycle** using user credentials
 - copy the generated provider file, **migrate state**, then run a second init/apply cycle using service account impersonated credentials
@@ -72,7 +72,7 @@ This stage only requires minimal prerequisites:
 
 The organization ideally needs to be empty. If pre-existing resources are present some care needs to be put into preserving their existing IAM and org policies. Ideally, move legacy projects to a dedicated folder where the current org-level configuration can be replicated.
 
-Billing admin permissions are ideally available on either an org-contained billing account or an external one. If those are unavailable, the YAML configuration files need to be updated to remove billing IAM bindings, and those need to be assigned via an external flow. Refer to the [billing section](#billing-account-iam) for more details or non-standard configurations.
+Billing admin permissions are ideally available on either an org-contained billing account or an external one. If those are unavailable, the YAML configuration files need to be updated to remove billing IAM bindings, and those need to be assigned via an external flow. Refer to the [billing section](#billing-account-iam-and-billing-export) for more details or non-standard configurations.
 
 The admin principal is typically a group that includes the user running the first apply, but any kind of principal is supported. More principals (network admins, security admins, etc.) are present in some of the [default factories datasets](#default-factory-datasets), and others can be added if needed by editing the YAML configuration files.
 
@@ -100,10 +100,12 @@ factories_config = {
   # dataset = "datasets/hardened"
   # optional
   paths = {
-    # absolute paths ignores the dataset base path
+    # absolute paths ignore the dataset base path
     billing_accounts = "/mydata/foo/billing-accounts"
+    # relative paths are resolved against the dataset base path
+    cicd_workflows   = "cicd.yaml"
     # and if the path does not exist this specific factory is skipped
-    cicd             = "/tmp/fake/cicd.yaml"
+    vpcs             = "/tmp/fake/vpcs"
   }
 }
 ```
@@ -112,7 +114,7 @@ factories_config = {
 
 Configurations defaults are stored in the `defaults.yaml` file in the dataset selected above. Before starting, edit the following attributes in the file to match your configuration.
 
-The standard datasets use the `gcp-organization-admins` alias to assign administrator roles. The alias is expanded via the `context.iam_principals` attribute in the default file, which should be set to a valid group. Also make sure that the user running the initial apply is a member.
+The standard datasets use the `gcp-organization-admins` alias to assign administrator roles. The alias is expanded via the `context.iam_principals` attribute in the default file, which should be set to a valid group. Also make sure that the user running the initial apply is a member. The same alias is used in `context.email_addresses` for the organization's essential contacts, and should be set to an address in the organization's domain to comply with the `essentialcontacts.allowedContactDomains` org policy.
 
 ```yaml
 global:
@@ -127,14 +129,17 @@ projects:
   defaults:
     # define a unique prefix with a maximum of 9 characters
     prefix: foo-1
-  locations:
-    bigquery: $locations:primary
-    logging: $locations:primary
-    storage: $locations:primary
+    locations:
+      bigquery: $locations:primary
+      logging: $locations:primary
+      storage: $locations:primary
 context:
+  email_addresses:
+    # use an address in your organization's domain
+    gcp-organization-admins: gcp-organization-admins@example.org
   iam_principals:
     # make sure the user running apply is a member of this group
-    gcp-organization-admins: group:fabric-fast-owners@example.com
+    gcp-organization-admins: group:gcp-organization-admins@example.org
   locations:
     primary: europe-west1
 ```
@@ -148,7 +153,7 @@ Like in classic FAST, the user running the first apply cycle needs specific perm
 To quickly self-grant the above roles, run the following code snippet as the initial Organization Admin. The best approach is to use the same group used for organization admins above.
 
 ```bash
-export FAST_PRINCIPAL="group:gcp-organization-admins@example.com"
+export FAST_PRINCIPAL="group:gcp-organization-admins@example.org"
 
 # find your organization and export its id in the FAST_ORG variable
 gcloud organizations list
@@ -202,15 +207,15 @@ compute.disableSerialPortAccess                  -            SET
 ```
 
 ```tfvars
-# create or edit the 0-org-setup.auto.tfvars.file
+# create or edit the 0-org-setup.auto.tfvars file
 # do NOT include the 'constraints/' prefix, use the names matching the YAML files
 org_policies_imports = [
-  "compute.managed.restrictProtocolForwardingCreationForTypes",
-  "essentialcontacts.managed.allowedContactDomains",
+  "compute.restrictProtocolForwardingCreationForTypes",
+  "essentialcontacts.allowedContactDomains",
   "iam.allowedPolicyMemberDomains",
   "iam.automaticIamGrantsForDefaultServiceAccounts",
-  "iam.managed.disableServiceAccountKeyCreation",
-  "iam.managed.disableServiceAccountKeyUpload",
+  "iam.disableServiceAccountKeyCreation",
+  "iam.disableServiceAccountKeyUpload",
   "storage.uniformBucketLevelAccess"
 ]
 ```
@@ -221,20 +226,23 @@ Once org policies have been imported, the variable definition can be removed fro
 
 For brownfield implementations you may need to import existing organization IAM policies. These snippets can help you add existing settings into the YAML file.
 
-Scripts below require [yq](https://github.com/mikefarah/yq/) in at least version 4. It was tested using yq `v4.47.2`.
+Scripts below require [yq](https://github.com/mikefarah/yq/) in at least version 4. It was tested using yq `v4.47.2`. Conditional bindings and `deleted:` principals are skipped: conditional bindings need to be added by hand via `iam_bindings` or `iam_by_principals_conditional`.
 
-To create `iam:` part of the `/organization/.config.yaml` file, you can use following snippet:
+To create the `iam:` part of the `organization/.config.yaml` file, you can use the following snippet:
 
 ```shell
-gcloud <resource> get-iam-policy <resource name> | yq '.bindings | map({"key": .role, "value": .members}) | from_entries'
+gcloud <resource> get-iam-policy <resource name> | yq '
+.bindings | map(select(.condition == null) | {"key": .role, "value": .members | map(select(. != "deleted:*"))}) |
+map(select(.value | length > 0)) | from_entries
+'
 ```
 
-To create `iam_by_principals:` part of the factory YAML file, you can use following snippet:
+To create the `iam_by_principals:` part of the factory YAML file, you can use the following snippet:
 
 ```shell
 gcloud <resource> get-iam-policy <resource name> |  yq '
-[.bindings | .[] | .members[] as $member | { "member": $member, "role": .role}] |
-group_by(.member) | sort_by(.[0].member) | .[] | { .[0].member: map(.role)}
+[.bindings | .[] | select(.condition == null) | .members[] as $member | { "member": $member, "role": .role}] |
+map(select(.member != "deleted:*")) | group_by(.member) | sort_by(.[0].member) | .[] | { .[0].member: map(.role)}
 '
 ```
 
@@ -283,7 +291,7 @@ ln -s /home/user/fast-configs/test-0/providers/0-org-setup-providers.tf ./
 ln -s /home/user/fast-configs/test-0/0-org-setup.auto.tfvars ./
 ```
 
-If you did not configure local output files use the GCS bucket to fetch output files. The bucket name can be derived from the `tfvars.org_setup.automation.outputs_bucket` Terraform output. Adjust the path, run the script, then copy/paste the resulting commands.
+If you did not configure local output files use the GCS bucket to fetch output files. The bucket name can be derived from the `tfvars["org-setup"].automation.outputs_bucket` Terraform output. Adjust the path, run the script, then copy/paste the resulting commands.
 
 ```bash
 ../fast-links.sh gs://test0-prod-iac-core-0-iac-outputs
@@ -393,6 +401,7 @@ This is a simple reference table of available interpolation namespaces, refer to
 - `$tag_values:my_value`
 - `$vpc_host_projects:my_project`
 - `$vpc_sc_perimeters:my_perimeter`
+- `$workload_identity_pools:my_project/my_pool`
 - `$workload_identity_providers:my_project/my_pool/my_provider`
 
 ### Factory data
@@ -416,8 +425,8 @@ The default paths point to the dataset in the `datasets/classic` folder which de
 - **folders** (`[dataset]/folders`) \
   folder-level factory to define the resource management hierarchy and individual folder attributes (IAM, org policies, tag bindings, etc.); also supports defining folder-level IaC resources
 - **projects** (`[dataset]/projects`) \
-  folder-level factory to define projects and their attributes (projejct factory)
-- **cicd** (`[dataset]/cicd-workflows.yaml`) \
+  folder-level factory to define projects and their attributes (project factory)
+- **cicd_workflows** (`[dataset]/cicd.yaml`, disabled by default unless set in `factories_config.paths.cicd_workflows`) \
   file-level factory to define CI/CD configurations for this and subsequent stages
 
 ### Defaults configuration
@@ -431,10 +440,6 @@ This is a commented example of a defaults file, showing a minimal working config
 global:
   # billing account also set as default in the internal project factory
   billing_account: 123456-123456-123456
-  # default locations for this stage resources
-  locations:
-    bigquery: europe-west1
-    logging: europe-west1
   # organization attributes (id is required)
   organization:
     domain: example.org
@@ -445,8 +450,11 @@ projects:
   defaults:
     # setting a prefix either here or in overrides is required
     prefix: foo-1
-    # default location for storage buckets
-    storage_location: europe-west1
+    # default locations for project resources
+    locations:
+      bigquery: europe-west1
+      logging: europe-west1
+      storage: europe-west1
   overrides: {}
 # FAST output files generated by this stage
 output_files:
@@ -462,8 +470,10 @@ output_files:
     # [...]
 # static values added to context interpolation tables and used in factories
 context:
+  email_addresses:
+    gcp-organization-admins: gcp-organization-admins@example.org
   iam_principals:
-    gcp-organization-admins: group:fabric-fast-owners@example.com
+    gcp-organization-admins: group:gcp-organization-admins@example.org
 ```
 
 ### Billing account IAM and billing export
@@ -555,7 +565,7 @@ Log sinks can refer to project-level destination via different contexts.
 # example log sinks showing different destination contexts
 # file: datasets/classic/organization/.config.yaml
 logging:
-  storage_location: $locations:default
+  storage_location: $locations:primary
   sinks:
     # log bucket destination
     audit-logs:
@@ -574,7 +584,7 @@ logging:
         protoPayload.serviceName="sts.googleapis.com"
     # project destination
     vpc-sc:
-      destination: $projject_ids:log-0
+      destination: $project_ids:log-0
       filter: |
         protoPayload.metadata.@type="type.googleapis.com/google.cloud.audit.VpcServiceControlAuditMetadata"
 ```
@@ -609,8 +619,8 @@ iam_bindings:
     members:
       - $iam_principals:service_accounts/iac-0/iac-pf-rw
     condition:
-      # $organization is set as a string template variable by the module
-      expression: resource.matchTag('${organization}/context', 'project-factory')
+      # $organization is set as a template variable object by the module
+      expression: resource.matchTag('${organization.id}/context', 'project-factory')
       title: Project factory org policy admin
 ```
 
@@ -731,10 +741,10 @@ service_accounts:
 
 You need to extend this configuration to all other stages that you plan to use in your deployment and add permissions to IaC service account dedicated for specific stage.
 
-Once one or more providers have been defined they can be referenced in the CI/CD configuration file. The following example defines a workflow configuration for this stage.
+Once one or more providers have been defined they can be referenced in the CI/CD configuration file (enabled by setting `factories_config.paths.cicd_workflows = "cicd.yaml"`). The following example defines a workflow configuration for this stage.
 
 ```yaml
-# cicd-workflows.yaml
+# cicd.yaml
 
 org-setup:
   provider_files:
@@ -752,6 +762,7 @@ org-setup:
   tfvars_files:
     - 0-org-setup.auto.tfvars
   workload_identity:
+    pool: $workload_identity_pools:iac-0/default
     provider: $workload_identity_providers:iac-0/default/github-default
     iam_principalsets:
       template: github
@@ -773,6 +784,7 @@ The format of the IAM principalsets used to grant impersonation permissions to t
 org-setup:
   # identical lines omitted
   workload_identity:
+    pool: $workload_identity_pools:iac-0/default
     provider: $workload_identity_providers:iac-0/default/github-default
     iam_principalsets:
       apply: principalSet://iam.googleapis.com/%s/attribute.fast_sub/repo:%s:ref:refs/heads/%s
@@ -782,47 +794,32 @@ org-setup:
 #### Okta
 
 <details>
-<summary>Configure Okta as  Workload Identity provider</summary>
+<summary>Configure Okta as Workload Identity provider</summary>
 
-Okta is a special case. Unlike providers such as GitHub or GitLab, it's an identity provider that doesn't manage repositories. To use Okta as a Workload Identity provider, configure it in your `datasets/classic/cicd.yaml` file as shown in the following example:
+Okta is a special case. Unlike providers such as GitHub or GitLab, it is an identity provider that does not manage repositories, so workflow files are not generated through `cicd_workflows`. Instead, configure the Okta Workload Identity Pool provider, organization policy exception, and CI/CD service account IAM bindings directly in `datasets/classic/projects/core/iac-0.yaml`:
+
+- Under `workload_identity_pools`, define the Okta OIDC provider:
 
 ```yaml
-workload_identity_federation:
-  pool_name: iac-0
-  project: $project_ids:iac-0
-  providers:
-    okta:
-      issuer: okta
-      provider_id: okta
-      custom_settings:
-        audiences:
-          - <REPLACE_WITH_CUSTOM_AUDIENCE>   // Modify this
-        okta:
-          auth_server_name: <REPLACE_WITH_SERVER_NAME>   // Modify this
-          organization_name: <REPLACE_WITH_ORG_NAME>.okta.com   // Modify this
-workflows:
-  org-setup:
-    template: okta
-    workload_identity_provider:
-      id: $wif_providers:okta
-      audiences: []
-    output_files:
-      storage_bucket: $storage_buckets:iac-0/iac-outputs
-      providers:
-        apply: $output_files:providers/0-org-setup
-        plan: $output_files:providers/0-org-setup-ro
-      files:
-        - 0-org-setup.auto.tfvars.json
-    service_accounts:
-      apply: $iam_principals:service_accounts/iac-0/iac-org-cicd-rw
-      plan: $iam_principals:service_accounts/iac-0/iac-org-cicd-ro
+# datasets/classic/projects/core/iac-0.yaml
+workload_identity_pools:
+  default:
+    display_name: Default pool for CI/CD.
+    providers:
+      okta:
+        display_name: Okta.
+        identity_provider:
+          oidc:
+            allowed_audiences:
+              - <REPLACE_WITH_CUSTOM_AUDIENCE> # Modify this
+            issuer_uri: https://<REPLACE_WITH_ORG_NAME>.okta.com/oauth2/<REPLACE_WITH_SERVER_NAME> # Modify this
+            template: okta
 ```
 
-Finally you will need to modify the following org policies and IAM permissions in `datasets/classic/organization/org-policies/iam.yaml` file:
-
-- Under `org_polices` add your Okta provider URL :
+- Under `org_policies`, add your Okta issuer URL to the list of allowed Workload Identity providers. Apply this change before adding the provider above: the policy is created after the project's Workload Identity providers and takes several minutes to become effective, so the two cannot go in the same apply.
 
 ```yaml
+# datasets/classic/projects/core/iac-0.yaml
 org_policies:
   iam.workloadIdentityPoolProviders:
     rules:
@@ -831,14 +828,14 @@ org_policies:
             - https://token.actions.githubusercontent.com
             - https://gitlab.com
             - https://app.terraform.io
-            - https://<REPLACE_WITH_ORG_NAME>.okta.com/oauth2/default   // Modify this
+            - https://<REPLACE_WITH_ORG_NAME>.okta.com/oauth2/<REPLACE_WITH_SERVER_NAME> # Modify this
 ```
 
-This configuration adds Okta to the list of allowed Workload Identity providers in your GCP organization.
-
-- Under `iac-org-cicd-ro` and `iac-org-cicd-rw` service accounts add `roles/iam.workloadIdentityUser` to each of them:
+- Under `service_accounts`, grant `roles/iam.workloadIdentityUser` on `iac-org-cicd-ro` and `iac-org-cicd-rw` so identities from the pool can impersonate them:
 
 ```yaml
+# datasets/classic/projects/core/iac-0.yaml
+service_accounts:
   iac-org-cicd-ro:
     display_name: IaC service account for org setup CI/CD (read-only).
     iam_sa_roles:
@@ -847,8 +844,7 @@ This configuration adds Okta to the list of allowed Workload Identity providers 
         - roles/iam.serviceAccountTokenCreator
     iam:
       roles/iam.workloadIdentityUser:
-        - principalSet://iam.googleapis.com/projects/<REPLACE_WITH_IAC_PROJECT_NUMBER>/locations/global/workloadIdentityPools/iac-0/*    // Modify this
-
+        - principalSet://iam.googleapis.com/projects/<REPLACE_WITH_IAC_PROJECT_NUMBER>/locations/global/workloadIdentityPools/default/* # Modify this
   iac-org-cicd-rw:
     display_name: IaC service account for org setup CI/CD (read-write).
     iam_sa_roles:
@@ -857,10 +853,9 @@ This configuration adds Okta to the list of allowed Workload Identity providers 
         - roles/iam.serviceAccountTokenCreator
     iam:
       roles/iam.workloadIdentityUser:
-        - principalSet://iam.googleapis.com/projects/<REPLACE_WITH_IAC_PROJECT_NUMBER>/locations/global/workloadIdentityPools/iac-0/*    // Modify this
+        - principalSet://iam.googleapis.com/projects/<REPLACE_WITH_IAC_PROJECT_NUMBER>/locations/global/workloadIdentityPools/default/* # Modify this
 ```
 
-This allows identities from the Workload Identity Pool to impersonate both IaC service accounts.
 </details>
 
 ## Leveraging classic FAST Stages

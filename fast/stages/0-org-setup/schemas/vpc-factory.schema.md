@@ -10,10 +10,12 @@
 - ⁺**name**: *string*
 - **description**: *string*
 - **auto_create_subnetworks**: *boolean*
+- **bgp_config**: *reference([bgp_config](#refs-bgp_config))*
 - **delete_default_routes_on_create**: *boolean*
 - **mtu**: *number*
 - **routing_mode**: *string*
   <br>*enum: ['GLOBAL', 'REGIONAL']*
+- **service_connection_policies**: *reference([service_connection_policies](#refs-service_connection_policies))*
 - **firewall_policy_enforcement_order**: *string*
   <br>*enum: ['BEFORE_CLASSIC_FIREWALL', 'AFTER_CLASSIC_FIREWALL']*
 - **create_googleapis_routes**: *reference([create_googleapis_routes](#refs-create_googleapis_routes))*
@@ -26,12 +28,19 @@
   - items: *reference([psa_config](#refs-psa_config))*
 - **nat_config**: *reference([nat_config](#refs-nat_config))*
 - **ncc_config**: *reference([ncc_config](#refs-ncc_config))*
-- **routes**: *object*
-- **policy_based_routes**: *object*
+- **routes**: *reference([routes](#refs-routes))*
+- **policy_based_routes**: *reference([policy_based_routes](#refs-policy_based_routes))*
 - **vpn_config**: *object*
 
 ## Definitions
 
+- **bgp_config**<a name="refs-bgp_config"></a>: *object*
+  <br>*additional properties: false*
+  - **always_compare_med**: *boolean*
+  - **best_path_selection_mode**: *string*
+    <br>*enum: ['LEGACY', 'STANDARD']*
+  - **inter_region_cost**: *string*
+    <br>*enum: ['DEFAULT', 'ADD_COST_TO_MED']*
 - **create_googleapis_routes**<a name="refs-create_googleapis_routes"></a>: *object*
   - **directpath**: *boolean*
   - **directpath-6**: *boolean*
@@ -52,10 +61,69 @@
   - **internal_range**: *string*
 - **nat_config**<a name="refs-nat_config"></a>: *object*
   - **`^[a-z0-9-]+$`**: *object*
+    <br>*additional properties: false*
+    - **addresses**: *array*
+      - items: *string*
+    - **config_port_allocation**: *object*
+      <br>*additional properties: false*
+      - **enable_endpoint_independent_mapping**: *boolean*
+      - **enable_dynamic_port_allocation**: *boolean*
+      - **min_ports_per_vm**: *number*
+      - **max_ports_per_vm**: *number*
+    - **config_source_subnetworks**: *object*
+      <br>*additional properties: false*
+      - **all**: *boolean*
+      - **primary_ranges_only**: *boolean*
+      - **subnetworks**: *array*
+        - items: *object*
+          <br>*additional properties: false*
+          - ⁺**self_link**: *string*
+          - **all_ranges**: *boolean*
+          - **primary_range**: *boolean*
+          - **secondary_ranges**: *array*
+            - items: *string*
+    - **config_timeouts**: *object*
+      <br>*additional properties: false*
+      - **icmp**: *number*
+      - **tcp_established**: *number*
+      - **tcp_time_wait**: *number*
+      - **tcp_transitory**: *number*
+      - **udp**: *number*
+    - **endpoint_types**: *array*
+      - items: *string*
+        <br>*enum: ['ENDPOINT_TYPE_VM', 'ENDPOINT_TYPE_SWG', 'ENDPOINT_TYPE_MANAGED_PROXY_LB']*
+    - **logging_filter**: *string*
+      <br>*enum: ['ERRORS_ONLY', 'TRANSLATIONS_ONLY', 'ALL']*
+    - **num_nat_ips**: *number*
     - ⁺**region**: *string*
+    - **router_asn**: *number*
+    - **router_create**: *boolean*
+    - **router_name**: *string*
+    - **rules**: *array*
+      - items: *object*
+        <br>*additional properties: false*
+        - **description**: *string*
+        - ⁺**match**: *string*
+        - **rule_number**: *number*
+        - **source_ips**: *array*
+          - items: *string*
+        - **source_ranges**: *array*
+          - items: *string*
+    - **type**: *string*
+      <br>*enum: ['PUBLIC', 'PRIVATE']*
 - **ncc_config**<a name="refs-ncc_config"></a>: *object*
+  <br>*additional properties: false*
   - ⁺**hub**: *string*
   - **group**: *string*
+  - **description**: *string*
+  - **labels**: *object*
+    <br>*additional properties: false*
+    - **`^[a-z][a-z0-9_-]{0,62}$`**: *string*
+      <br>*pattern: ^[a-z0-9_-]{0,63}$*
+  - **exclude_export_ranges**: *array*
+    - items: *string*
+  - **include_export_ranges**: *array*
+    - items: *string*
 - **network_attachments**<a name="refs-network_attachments"></a>: *object*
   - **`^[a-z0-9-]+$`**: *object*
     - **subnet**: *string*
@@ -70,6 +138,28 @@
   - **create_remote_peer**: *boolean*
   - **export_routes**: *boolean*
   - **import_routes**: *boolean*
+- **policy_based_routes**<a name="refs-policy_based_routes"></a>: *object*
+  - **`^[a-z0-9-]+$`**: *object*
+    <br>*additional properties: false*
+    - **description**: *string*
+    - **filter**: *object*
+      <br>*additional properties: false*
+      - **dest_range**: *string*
+      - **ip_protocol**: *string*
+      - **src_range**: *string*
+    - **labels**: *object*
+      <br>*additional properties: false*
+      - **`^[a-z][a-z0-9_-]{0,62}$`**: *string*
+        <br>*pattern: ^[a-z0-9_-]{0,63}$*
+    - **name**: *string*
+    - **next_hop_ilb_ip**: *string*
+    - **priority**: *number*
+    - **target**: *object*
+      <br>*additional properties: false*
+      - **interconnect_attachment**: *string*
+      - **tags**: *array*
+        - items: *string*
+    - **use_default_routing**: *boolean*
 - **psa_config**<a name="refs-psa_config"></a>: *object*
   - **deletion_policy**: *string*
   - **ranges**: *object*
@@ -89,3 +179,34 @@
       - **all_subnets**: *boolean*
       - **ip_ranges**: *object*
         - **`.*`**: *string*
+- **routes**<a name="refs-routes"></a>: *object*
+  - **`^[a-z0-9-]+$`**: *object*
+    <br>*additional properties: false*
+    - **description**: *string*
+    - ⁺**dest_range**: *string*
+    - **name**: *string*
+    - ⁺**next_hop_type**: *string*
+      <br>*enum: ['gateway', 'ilb', 'instance', 'ip', 'vpn_tunnel']*
+    - ⁺**next_hop**: *string*
+    - **priority**: *number*
+    - **tags**: *array*
+      - items: *string*
+- **service_connection_policies**<a name="refs-service_connection_policies"></a>: *object*
+  <br>*additional properties: false*
+  - **`^[a-z0-9-]+$`**: *object*
+    <br>*additional properties: false*
+    - ⁺**location**: *string*
+    - ⁺**service_class**: *string*
+    - **description**: *string*
+    - **labels**: *object*
+      <br>*additional properties: string*
+    - ⁺**psc_config**: *object*
+      <br>*additional properties: false*
+      - ⁺**subnetworks**: *array*
+        - items: *string*
+      - **limit**: *number*
+      - **producer_instance_location**: *string*
+        <br>*enum: ['CUSTOM_RESOURCE_HIERARCHY_LEVELS']*
+      - **nodes**: *array*
+        - items: *string*
+          <br>*pattern: ^(projects|folders|organizations)/[a-zA-Z0-9-]+$*

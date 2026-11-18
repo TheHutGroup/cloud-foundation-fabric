@@ -191,6 +191,10 @@
       - **internal_range**: *string*
 - **context**: *object*
   <br>*additional properties: false*
+  - **addresses**: *object*
+    <br>*additional properties: string*
+  - **cidr_ranges**: *object*
+    <br>*additional properties: string*
   - **cidr_ranges_sets**: *object*
     <br>*additional properties: array*
   - **custom_roles**: *object*
@@ -206,6 +210,12 @@
   - **locations**: *object*
     <br>*additional properties: string*
   - **project_ids**: *object*
+    <br>*additional properties: string*
+  - **project_numbers**: *object*
+    <br>*additional properties: string*
+  - **security_profile_groups**: *object*
+    <br>*additional properties: string*
+  - **service_attachments**: *object*
     <br>*additional properties: string*
   - **storage_buckets**: *object*
     <br>*additional properties: string*

@@ -310,6 +310,97 @@
         }
       }
     },
+    "model_armor_floor_setting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filters"
+      ],
+      "properties": {
+        "enforce": {
+          "type": "boolean"
+        },
+        "multi_language_detection": {
+          "type": "boolean"
+        },
+        "filters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "malicious_uris": {
+              "type": "boolean"
+            },
+            "pi_and_jailbreak": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "confidence_level": {
+                  "type": "string",
+                  "enum": [
+                    "LOW_AND_ABOVE",
+                    "MEDIUM_AND_ABOVE",
+                    "HIGH"
+                  ]
+                }
+              }
+            },
+            "rai": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "DANGEROUS": {
+                  "type": "string",
+                  "enum": [
+                    "LOW_AND_ABOVE",
+                    "MEDIUM_AND_ABOVE",
+                    "HIGH"
+                  ]
+                },
+                "HARASSMENT": {
+                  "type": "string",
+                  "enum": [
+                    "LOW_AND_ABOVE",
+                    "MEDIUM_AND_ABOVE",
+                    "HIGH"
+                  ]
+                },
+                "HATE_SPEECH": {
+                  "type": "string",
+                  "enum": [
+                    "LOW_AND_ABOVE",
+                    "MEDIUM_AND_ABOVE",
+                    "HIGH"
+                  ]
+                },
+                "SEXUALLY_EXPLICIT": {
+                  "type": "string",
+                  "enum": [
+                    "LOW_AND_ABOVE",
+                    "MEDIUM_AND_ABOVE",
+                    "HIGH"
+                  ]
+                }
+              }
+            },
+            "sdp": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "basic": {
+                  "type": "boolean"
+                },
+                "inspect_template": {
+                  "type": "string"
+                },
+                "deidentify_template": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "org_policies": {
       "type": "object",
       "additionalProperties": false,
@@ -546,8 +637,23 @@
                                   "description": "The client ID."
                                 },
                                 "client_secret": {
-                                  "type": "string",
-                                  "description": "The client secret (optional)."
+                                  "type": "object",
+                                  "description": "The client secret (optional).",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "value": {
+                                      "type": "string",
+                                      "description": "The client secret value."
+                                    },
+                                    "path": {
+                                      "type": "string",
+                                      "description": "File path relative to the stage directory, read at every plan."
+                                    },
+                                    "wo_version": {
+                                      "type": "number",
+                                      "description": "Switches to the provider write-only attribute."
+                                    }
+                                  }
                                 },
                                 "jwks_json": {
                                   "type": "string",
@@ -1021,8 +1127,23 @@
           "description": "The client ID for the application."
         },
         "client_secret": {
-          "type": "string",
-          "description": "The client secret for the application."
+          "type": "object",
+          "description": "The client secret for the application.",
+          "additionalProperties": false,
+          "properties": {
+            "value": {
+              "type": "string",
+              "description": "The client secret value."
+            },
+            "path": {
+              "type": "string",
+              "description": "File path relative to the stage directory, read at every plan."
+            },
+            "wo_version": {
+              "type": "number",
+              "description": "Switches to the provider write-only attribute."
+            }
+          }
         },
         "attributes_type": {
           "type": "string",

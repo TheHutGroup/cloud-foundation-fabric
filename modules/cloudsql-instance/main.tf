@@ -99,7 +99,7 @@ resource "google_sql_database_instance" "primary" {
     tier                        = var.tier
     edition                     = var.edition
     deletion_protection_enabled = var.gcp_deletion_protection
-    disk_autoresize             = var.disk_size == null
+    disk_autoresize             = var.disk_autoresize
     disk_autoresize_limit       = var.disk_autoresize_limit
     disk_size                   = var.disk_size
     disk_type                   = var.disk_type
@@ -109,6 +109,7 @@ resource "google_sql_database_instance" "primary" {
     collation                   = var.collation
     connector_enforcement       = var.connector_enforcement
     data_api_access             = var.data_api_access
+    enable_dataplex_integration = var.enable_dataplex_integration
     time_zone                   = var.time_zone
     retain_backups_on_delete    = try(var.backup_configuration.retain_backups_on_delete, null)
 
@@ -141,9 +142,16 @@ resource "google_sql_database_instance" "primary" {
           : []
         )
         content {
-          psc_enabled               = true
-          allowed_consumer_projects = local.psc_allowed_consumer_projects
-          network_attachment_uri    = try(var.network_config.connectivity.psc_config.network_attachment_uri, null)
+          psc_enabled                        = true
+          allowed_consumer_projects          = local.psc_allowed_consumer_projects
+          network_attachment_uri             = try(var.network_config.connectivity.psc_config.network_attachment_uri, null)
+          psc_auto_connection_policy_enabled = var.network_config.connectivity.psc_config.psc_auto_connection_policy_enabled
+          psc_auto_dns_enabled               = var.network_config.connectivity.psc_config.psc_auto_dns_enabled
+          psc_write_endpoint_dns_enabled = (
+            var.edition == "ENTERPRISE_PLUS"
+            ? var.network_config.connectivity.psc_config.psc_write_endpoint_dns_enabled
+            : null
+          )
 
           dynamic "psc_auto_connections" {
             for_each = local.psc_auto_connections
@@ -305,7 +313,7 @@ resource "google_sql_database_instance" "replicas" {
     tier                        = coalesce(each.value.tier, var.tier)
     edition                     = var.edition
     deletion_protection_enabled = var.gcp_deletion_protection
-    disk_autoresize             = var.disk_size == null
+    disk_autoresize             = var.disk_autoresize
     disk_autoresize_limit       = var.disk_autoresize_limit
     disk_size                   = var.disk_size
     disk_type                   = var.disk_type
@@ -348,19 +356,17 @@ resource "google_sql_database_instance" "replicas" {
           : []
         )
         content {
-          psc_enabled               = true
-          allowed_consumer_projects = local.psc_allowed_consumer_projects
-          network_attachment_uri    = try(var.network_config.connectivity.psc_config.network_attachment_uri, null)
+          psc_enabled                        = true
+          allowed_consumer_projects          = local.psc_allowed_consumer_projects
+          network_attachment_uri             = try(var.network_config.connectivity.psc_config.network_attachment_uri, null)
+          psc_auto_connection_policy_enabled = var.network_config.connectivity.psc_config.psc_auto_connection_policy_enabled
+          psc_auto_dns_enabled               = var.network_config.connectivity.psc_config.psc_auto_dns_enabled
 
           dynamic "psc_auto_connections" {
-            for_each = (
-              try(var.network_config.connectivity.psc_config.psc_auto_connections, null) != null
-              ? [""]
-              : []
-            )
+            for_each = local.psc_auto_connections
             content {
-              consumer_network            = local.psc_consumer_network
-              consumer_service_project_id = local.psc_consumer_service_project_id
+              consumer_network            = psc_auto_connections.value.consumer_network
+              consumer_service_project_id = psc_auto_connections.value.consumer_service_project_id
             }
           }
         }

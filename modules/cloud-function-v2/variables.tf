@@ -72,7 +72,7 @@ variable "bundle_config" {
         ||
         # local ZIP archive
         (
-          try(fileexists(pathexpand(var.bundle_config.path)), null) != null &&
+          try(fileexists(pathexpand(var.bundle_config.path)), false) &&
           endswith(var.bundle_config.path, ".zip")
         )
       )
@@ -149,7 +149,7 @@ variable "function_config" {
     min_instance_count               = optional(number, 0)
     memory_mb                        = optional(number, 256) # Memory in MB
     on_deploy_update_policy          = optional(bool)
-    runtime                          = optional(string, "python310")
+    runtime                          = optional(string, "python313")
     timeout_seconds                  = optional(number, 180)
   })
   default  = {}

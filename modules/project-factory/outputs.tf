@@ -16,10 +16,12 @@
 
 locals {
   _outputs_automation_buckets = {
-    for k, v in local.automation_buckets : v.parent_name => k
+    for k, v in local.automation_buckets :
+    v.parent_name => k if v.parent_type == "project"
   }
   _outputs_automation_sas = {
-    for k, v in local.automation_sas : v.prefix => k...
+    for k, v in local.automation_sas :
+    v.parent => k... if v.parent_type == "project"
   }
   outputs_projects = {
     for k, v in local.projects_input : k => {
@@ -42,15 +44,27 @@ locals {
           }
         }
       }
-      kms_keys   = local.projects_kms_keys[k]
-      number     = module.projects[k].number
-      project_id = module.projects[k].project_id
+      bigquery_datasets = {
+        for sk, sv in lookup(v, "datasets", {}) :
+        "${k}/${sk}" => (
+          module.bigquery-datasets["${k}/${sk}"].id
+        )
+      }
+      custom_roles = {
+        for sk, sv in module.projects[k].custom_roles :
+        "${k}/${sk}" => (
+          sv.id
+        )
+      }
+      kms_keys = local.projects_kms_keys[k]
+      number   = module.projects[k].number
       log_buckets = {
         for sk, sv in lookup(v, "log_buckets", {}) :
         "${k}/${sk}" => (
           module.log-buckets["${k}/${sk}"].id
         )
       }
+      project_id = module.projects[k].project_id
       pubsub_topics = {
         for sk, sv in lookup(v, "pubsub_topics", {}) :
         "${k}/${sk}" => (
@@ -102,6 +116,20 @@ locals {
       }
     }
   )
+}
+
+output "bigquery_datasets" {
+  description = "BigQuery dataset ids."
+  value = merge([
+    for k, v in local.outputs_projects : v.bigquery_datasets
+  ]...)
+}
+
+output "custom_roles" {
+  description = "Custom role ids."
+  value = merge([
+    for k, v in local.outputs_projects : v.custom_roles
+  ]...)
 }
 
 output "folder_ids" {

@@ -34,6 +34,12 @@ cloudfunctions.requireVPCConnector:
   rules:
     - enforce: true
 
+# cloudfunctions.restrictAllowedGenerations:
+#   rules:
+#     - allow:
+#         values:
+#           - "2ndGen"
+
 custom.cloudrunDisableEnvironmentVariablePattern:
   rules:
     - enforce: true
@@ -42,15 +48,7 @@ custom.cloudrunJobDisableDefaultServiceAccount:
   rules:
     - enforce: true
 
-custom.cloudrunJobRequireBinaryAuthorization:
-  rules:
-    - enforce: true
-
 custom.cloudrunServiceDisableDefaultServiceAccount:
-  rules:
-    - enforce: true
-
-custom.cloudrunServiceRequireBinaryAuthorization:
   rules:
     - enforce: true
 
@@ -71,6 +69,22 @@ run.allowedVPCEgress:
     - allow:
         values:
           - "all-traffic"
+
+run.managed.disableEphemeralDisk:
+  rules:
+    - enforce: true
+
+run.managed.disableInlinedSource:
+  rules:
+    - enforce: true
+
+run.managed.disableJobsEphemeralDisk:
+  rules:
+    - enforce: true
+
+run.managed.disableWorkerPoolsEphemeralDisk:
+  rules:
+    - enforce: true
 
 run.managed.requireInvokerIam:
   rules:

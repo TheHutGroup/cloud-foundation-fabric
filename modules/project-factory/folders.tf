@@ -54,11 +54,13 @@ module "folder-1" {
   for_each = {
     for k, v in local.folders_input : k => v if v.level == 1
   }
-  folder_create       = lookup(each.value, "id", null) == null
-  id                  = lookup(each.value, "id", null)
-  deletion_protection = lookup(each.value, "deletion_protection", false)
-  parent              = coalesce(each.value.parent, "$folder_ids:default")
-  name                = try(each.value.name, null)
+  folder_create = lookup(each.value, "id", null) == null
+  id            = lookup(each.value, "id", null)
+  deletion_protection = coalesce(
+    lookup(each.value, "deletion_protection", null), false
+  )
+  parent = coalesce(each.value.parent, "$folder_ids:default")
+  name   = try(each.value.name, null)
   factories_config = {
     for k, v in lookup(each.value, "factories_config", {}) : k => try(pathexpand(
       var.factories_config.basepath == null || startswith(v, "/") || startswith(v, ".")
@@ -97,7 +99,9 @@ module "folder-1-iam" {
     if contains(["pam_entitlements", "org_policies"], k)
   }
   autokey_config                = lookup(each.value, "autokey_config", null)
+  cloud_armor_policy            = lookup(each.value, "cloud_armor_policy", null)
   contacts                      = lookup(each.value, "contacts", {})
+  firewall_policy               = lookup(each.value, "firewall_policy", null)
   iam                           = lookup(each.value, "iam", {})
   iam_bindings                  = lookup(each.value, "iam_bindings", {})
   iam_bindings_additive         = lookup(each.value, "iam_bindings_additive", {})
@@ -107,6 +111,7 @@ module "folder-1-iam" {
   iam_deny_policies             = lookup(each.value, "iam_deny_policies", {})
   logging_data_access           = lookup(each.value, "data_access_logs", {})
   logging_sinks                 = try(each.value.logging.sinks, {})
+  model_armor_floor_setting     = lookup(each.value, "model_armor_floor_setting", null)
   tag_bindings                  = lookup(each.value, "tag_bindings", {})
   context = merge(local.ctx, {
     tag_vars = {
@@ -115,8 +120,11 @@ module "folder-1-iam" {
     }
     iam_principals  = local.ctx_iam_principals
     kms_keys        = merge(local.ctx.kms_keys, local.kms_keys)
+    log_buckets     = merge(local.ctx.log_buckets, local.log_buckets)
     project_ids     = local.ctx_project_ids
     project_numbers = local.ctx_project_numbers
+    pubsub_topics   = merge(local.ctx.pubsub_topics, local.pubsub_topics)
+    storage_buckets = merge(local.ctx.storage_buckets, local.storage_buckets)
   })
 }
 
@@ -125,9 +133,11 @@ module "folder-2" {
   for_each = {
     for k, v in local.folders_input : k => v if v.level == 2
   }
-  folder_create       = lookup(each.value, "id", null) == null
-  id                  = lookup(each.value, "id", null)
-  deletion_protection = lookup(each.value, "deletion_protection", false)
+  folder_create = lookup(each.value, "id", null) == null
+  id            = lookup(each.value, "id", null)
+  deletion_protection = coalesce(
+    lookup(each.value, "deletion_protection", null), false
+  )
   parent = coalesce(
     each.value.parent, "$folder_ids:${each.value.parent_key}"
   )
@@ -175,7 +185,9 @@ module "folder-2-iam" {
     if contains(["pam_entitlements", "org_policies"], k)
   }
   autokey_config                = lookup(each.value, "autokey_config", null)
+  cloud_armor_policy            = lookup(each.value, "cloud_armor_policy", null)
   contacts                      = lookup(each.value, "contacts", {})
+  firewall_policy               = lookup(each.value, "firewall_policy", null)
   iam                           = lookup(each.value, "iam", {})
   iam_bindings                  = lookup(each.value, "iam_bindings", {})
   iam_bindings_additive         = lookup(each.value, "iam_bindings_additive", {})
@@ -185,6 +197,7 @@ module "folder-2-iam" {
   iam_deny_policies             = lookup(each.value, "iam_deny_policies", {})
   logging_data_access           = lookup(each.value, "data_access_logs", {})
   logging_sinks                 = try(each.value.logging.sinks, {})
+  model_armor_floor_setting     = lookup(each.value, "model_armor_floor_setting", null)
   tag_bindings                  = lookup(each.value, "tag_bindings", {})
   context = merge(local.ctx, {
     folder_ids = merge(local.ctx.folder_ids, {
@@ -196,8 +209,11 @@ module "folder-2-iam" {
     }
     iam_principals  = local.ctx_iam_principals
     kms_keys        = merge(local.ctx.kms_keys, local.kms_keys)
+    log_buckets     = merge(local.ctx.log_buckets, local.log_buckets)
     project_ids     = local.ctx_project_ids
     project_numbers = local.ctx_project_numbers
+    pubsub_topics   = merge(local.ctx.pubsub_topics, local.pubsub_topics)
+    storage_buckets = merge(local.ctx.storage_buckets, local.storage_buckets)
   })
 }
 
@@ -206,9 +222,11 @@ module "folder-3" {
   for_each = {
     for k, v in local.folders_input : k => v if v.level == 3
   }
-  folder_create       = lookup(each.value, "id", null) == null
-  id                  = lookup(each.value, "id", null)
-  deletion_protection = lookup(each.value, "deletion_protection", false)
+  folder_create = lookup(each.value, "id", null) == null
+  id            = lookup(each.value, "id", null)
+  deletion_protection = coalesce(
+    lookup(each.value, "deletion_protection", null), false
+  )
   parent = coalesce(
     each.value.parent, "$folder_ids:${each.value.parent_key}"
   )
@@ -256,7 +274,9 @@ module "folder-3-iam" {
     if contains(["pam_entitlements", "org_policies"], k)
   }
   autokey_config                = lookup(each.value, "autokey_config", null)
+  cloud_armor_policy            = lookup(each.value, "cloud_armor_policy", null)
   contacts                      = lookup(each.value, "contacts", {})
+  firewall_policy               = lookup(each.value, "firewall_policy", null)
   iam                           = lookup(each.value, "iam", {})
   iam_bindings                  = lookup(each.value, "iam_bindings", {})
   iam_bindings_additive         = lookup(each.value, "iam_bindings_additive", {})
@@ -266,6 +286,7 @@ module "folder-3-iam" {
   iam_deny_policies             = lookup(each.value, "iam_deny_policies", {})
   logging_data_access           = lookup(each.value, "data_access_logs", {})
   logging_sinks                 = try(each.value.logging.sinks, {})
+  model_armor_floor_setting     = lookup(each.value, "model_armor_floor_setting", null)
   tag_bindings                  = lookup(each.value, "tag_bindings", {})
   context = merge(local.ctx, {
     folder_ids = merge(local.ctx.folder_ids, {
@@ -277,8 +298,11 @@ module "folder-3-iam" {
     }
     iam_principals  = local.ctx_iam_principals
     kms_keys        = merge(local.ctx.kms_keys, local.kms_keys)
+    log_buckets     = merge(local.ctx.log_buckets, local.log_buckets)
     project_ids     = local.ctx_project_ids
     project_numbers = local.ctx_project_numbers
+    pubsub_topics   = merge(local.ctx.pubsub_topics, local.pubsub_topics)
+    storage_buckets = merge(local.ctx.storage_buckets, local.storage_buckets)
   })
 }
 
@@ -287,9 +311,11 @@ module "folder-4" {
   for_each = {
     for k, v in local.folders_input : k => v if v.level == 4
   }
-  folder_create       = lookup(each.value, "id", null) == null
-  id                  = lookup(each.value, "id", null)
-  deletion_protection = lookup(each.value, "deletion_protection", false)
+  folder_create = lookup(each.value, "id", null) == null
+  id            = lookup(each.value, "id", null)
+  deletion_protection = coalesce(
+    lookup(each.value, "deletion_protection", null), false
+  )
   parent = coalesce(
     each.value.parent, "$folder_ids:${each.value.parent_key}"
   )
@@ -337,7 +363,9 @@ module "folder-4-iam" {
     if contains(["pam_entitlements", "org_policies"], k)
   }
   autokey_config                = lookup(each.value, "autokey_config", null)
+  cloud_armor_policy            = lookup(each.value, "cloud_armor_policy", null)
   contacts                      = lookup(each.value, "contacts", {})
+  firewall_policy               = lookup(each.value, "firewall_policy", null)
   iam                           = lookup(each.value, "iam", {})
   iam_bindings                  = lookup(each.value, "iam_bindings", {})
   iam_bindings_additive         = lookup(each.value, "iam_bindings_additive", {})
@@ -346,6 +374,7 @@ module "folder-4-iam" {
   iam_by_principals_conditional = lookup(each.value, "iam_by_principals_conditional", {})
   logging_data_access           = lookup(each.value, "data_access_logs", {})
   logging_sinks                 = try(each.value.logging.sinks, {})
+  model_armor_floor_setting     = lookup(each.value, "model_armor_floor_setting", null)
   tag_bindings                  = lookup(each.value, "tag_bindings", {})
   iam_deny_policies             = lookup(each.value, "iam_deny_policies", {})
   context = merge(local.ctx, {
@@ -358,7 +387,10 @@ module "folder-4-iam" {
     }
     iam_principals  = local.ctx_iam_principals
     kms_keys        = merge(local.ctx.kms_keys, local.kms_keys)
+    log_buckets     = merge(local.ctx.log_buckets, local.log_buckets)
     project_ids     = local.ctx_project_ids
     project_numbers = local.ctx_project_numbers
+    pubsub_topics   = merge(local.ctx.pubsub_topics, local.pubsub_topics)
+    storage_buckets = merge(local.ctx.storage_buckets, local.storage_buckets)
   })
 }

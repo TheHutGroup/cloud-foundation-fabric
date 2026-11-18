@@ -660,9 +660,11 @@ values:
     service_account_id: projects/ft0-prod-iac-core-0/serviceAccounts/iac-org-cicd-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
   module.factory.module.bigquery-datasets["billing-0/billing_export"].google_bigquery_dataset.default:
     dataset_id: billing_export
+    default_collation: null
     default_encryption_configuration:
     - {}
     default_partition_expiration_ms: null
+    default_rounding_mode: null
     default_table_expiration_ms: null
     delete_contents_on_destroy: false
     deletion_policy: DELETE
@@ -717,6 +719,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     - action:
       - storage_class: COLDLINE
         type: SetStorageClass
@@ -736,6 +740,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     - action:
       - storage_class: NEARLINE
         type: SetStorageClass
@@ -755,6 +761,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     location: EUROPE-WEST1
     logging: []
     name: ft0-prod-iac-core-0-iac-org-state
@@ -771,11 +779,15 @@ values:
   ? module.factory.module.buckets["iac-0/iac-org-state"].google_storage_bucket_iam_binding.authoritative["$custom_roles:storage_viewer"]
   : bucket: ft0-prod-iac-core-0-iac-org-state
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/storageViewer
     timeouts: null
   ? module.factory.module.buckets["iac-0/iac-org-state"].google_storage_bucket_iam_binding.authoritative["roles/storage.admin"]
   : bucket: ft0-prod-iac-core-0-iac-org-state
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
     timeouts: null
   module.factory.module.buckets["iac-0/iac-outputs"].google_storage_bucket.bucket[0]:
@@ -815,6 +827,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     - action:
       - storage_class: COLDLINE
         type: SetStorageClass
@@ -834,6 +848,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     - action:
       - storage_class: NEARLINE
         type: SetStorageClass
@@ -853,6 +869,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     location: EUROPE-WEST1
     logging: []
     name: ft0-prod-iac-core-0-iac-outputs
@@ -869,11 +887,25 @@ values:
   ? module.factory.module.buckets["iac-0/iac-outputs"].google_storage_bucket_iam_binding.authoritative["$custom_roles:storage_viewer"]
   : bucket: ft0-prod-iac-core-0-iac-outputs
     condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-org-cicd-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-org-cicd-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-vpcsc-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/storageViewer
     timeouts: null
   module.factory.module.buckets["iac-0/iac-outputs"].google_storage_bucket_iam_binding.authoritative["roles/storage.admin"]:
     bucket: ft0-prod-iac-core-0-iac-outputs
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-vpcsc-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
     timeouts: null
   module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_bucket.bucket[0]:
@@ -913,6 +945,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     - action:
       - storage_class: COLDLINE
         type: SetStorageClass
@@ -932,6 +966,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     - action:
       - storage_class: NEARLINE
         type: SetStorageClass
@@ -951,6 +987,8 @@ values:
         send_days_since_custom_time_if_zero: null
         send_days_since_noncurrent_time_if_zero: null
         send_num_newer_versions_if_zero: null
+        size_above_bytes: null
+        size_below_bytes: null
     location: EUROPE-WEST1
     logging: []
     name: ft0-prod-iac-core-0-iac-stage-state
@@ -988,110 +1026,172 @@ values:
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 1-vpcsc/
+    members:
+    - serviceAccount:iac-vpcsc-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/storageViewer
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["1-vpcsc/roles/storage.admin"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 1-vpcsc/
+    members:
+    - serviceAccount:iac-vpcsc-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["2-networking/$custom_roles:storage_viewer"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 2-networking/
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/storageViewer
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["2-networking/roles/storage.admin"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 2-networking/
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["2-project-factory/$custom_roles:storage_viewer"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 2-project-factory/
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/storageViewer
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["2-project-factory/roles/storage.admin"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 2-project-factory/
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["2-security/$custom_roles:storage_viewer"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 2-security/
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/storageViewer
   ? module.factory.module.buckets["iac-0/iac-stage-state"].google_storage_managed_folder_iam_binding.authoritative["2-security/roles/storage.admin"]
   : bucket: ft0-prod-iac-core-0-iac-stage-state
     condition: []
     managed_folder: 2-security/
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["$custom_roles:project_iam_viewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/projectIamViewer
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["$custom_roles:service_networking_viewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/serviceNetworkingViewer
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["$custom_roles:service_project_network_admin"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/serviceProjectNetworkAdmin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/browser"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/browser
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/compute.networkAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/compute.networkAdmin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/compute.networkViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/compute.networkViewer
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/compute.securityAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/compute.securityAdmin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/compute.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/compute.viewer
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/compute.xpnAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/compute.xpnAdmin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/dns.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/dns.admin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/dns.reader"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/dns.reader
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/iam.networkAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/iam.networkAdmin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/logging.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/logging.admin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/logging.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/logging.viewer
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.folderAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.folderAdmin
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.folderViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.folderViewer
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectCreator"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectCreator
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectDeleter"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectDeleter
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectIamAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectIamAdmin
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.tagUser"]:
     condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.tagUser
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/resourcemanager.tagViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.tagViewer
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/serviceusage.serviceUsageAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/serviceusage.serviceUsageAdmin
   ? module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.authoritative["roles/serviceusage.serviceUsageViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/serviceusage.serviceUsageViewer
   module.factory.module.folder-1-iam["networking"].google_folder_iam_binding.bindings["project_factory"]:
     condition:
@@ -1100,63 +1200,104 @@ values:
         \  'roles/compute.networkUser', 'roles/composer.sharedVpcAgent',\n  'roles/container.hostServiceAgentUser',\
         \ 'roles/vpcaccess.user'\n])\n"
       title: Project factory delegated IAM grant.
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectIamAdmin
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["$custom_roles:logging_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/loggingViewer
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["$custom_roles:project_iam_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/projectIamViewer
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/browser"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/browser
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/cloudkms.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/cloudkms.admin
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/cloudkms.cryptoKeyEncrypterDecrypter"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/cloudkms.cryptoKeyEncrypterDecrypter
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/cloudkms.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/cloudkms.viewer
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/logging.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/logging.admin
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/logging.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/logging.viewer
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.folderAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.folderAdmin
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.folderViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.folderViewer
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectCreator"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectCreator
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectDeleter"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectDeleter
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectIamAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectIamAdmin
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.tagUser"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.tagUser
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/resourcemanager.tagViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.tagViewer
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/securitycenter.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/securitycenter.admin
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/securitycenter.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/securitycenter.viewer
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/serviceusage.serviceUsageAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/serviceusage.serviceUsageAdmin
   ? module.factory.module.folder-1-iam["security"].google_folder_iam_binding.authoritative["roles/serviceusage.serviceUsageViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/serviceusage.serviceUsageViewer
   module.factory.module.folder-1-iam["security"].google_folder_iam_binding.bindings["project_factory"]:
     condition:
@@ -1164,81 +1305,133 @@ values:
       expression: "api.getAttribute('iam.googleapis.com/modifiedGrantsByRole', []).hasOnly([\n\
         \  'roles/cloudkms.cryptoKeyEncrypterDecrypter'\n])\n"
       title: Project factory delegated IAM grant.
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectIamAdmin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["$custom_roles:logging_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/loggingViewer
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["$custom_roles:service_account_viewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/serviceAccountViewer
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["$custom_roles:service_project_network_admin"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/serviceProjectNetworkAdmin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/bigquery.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/bigquery.admin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/bigquery.dataViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/bigquery.dataViewer
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/bigquery.jobUser"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/bigquery.jobUser
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/browser"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/browser
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/compute.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/compute.viewer
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/container.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/container.admin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/container.clusterViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/container.clusterViewer
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/iam.serviceAccountAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/iam.serviceAccountAdmin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/logging.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/logging.admin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/logging.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/logging.viewer
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/pubsub.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/pubsub.admin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/pubsub.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/pubsub.viewer
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.folderAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.folderAdmin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.folderViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.folderViewer
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectCreator"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectCreator
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectDeleter"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectDeleter
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.projectIamAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.projectIamAdmin
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.tagUser"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.tagUser
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/resourcemanager.tagViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/resourcemanager.tagViewer
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/serviceusage.serviceUsageAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/serviceusage.serviceUsageAdmin
   ? module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/serviceusage.serviceUsageViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/serviceusage.serviceUsageViewer
   module.factory.module.folder-1-iam["teams"].google_folder_iam_binding.authoritative["roles/storage.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: roles/storage.admin
   module.factory.module.folder-1-iam["teams"].google_tags_tag_binding.binding["context"]:
     timeouts: null
@@ -1269,6 +1462,8 @@ values:
     timeouts: null
   ? module.factory.module.folder-2-iam["security/dev"].google_folder_iam_binding.authoritative["$custom_roles:cloudkms_viewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     role: organizations/1234567890/roles/cloudKmsViewer
   module.factory.module.folder-2-iam["security/dev"].google_tags_tag_binding.binding["environment"]:
     timeouts: null
@@ -1426,26 +1621,38 @@ values:
     timeouts: null
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["$custom_roles:cloudkms_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: organizations/1234567890/roles/cloudKmsViewer
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/bigquery.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/bigquery.admin
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/bigquery.dataViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/bigquery.dataViewer
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/bigquery.jobUser"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/bigquery.jobUser
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/browser"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/browser
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/cloudkms.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/cloudkms.admin
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/owner"]:
@@ -1455,22 +1662,32 @@ values:
     role: roles/owner
   ? module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/resourcemanager.projectIamAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/resourcemanager.projectIamAdmin
   ? module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/serviceusage.serviceUsageAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/serviceusage.serviceUsageAdmin
   ? module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/serviceusage.serviceUsageViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/serviceusage.serviceUsageViewer
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/storage.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/storage.admin
   module.factory.module.projects-iam["billing-0"].google_project_iam_binding.authoritative["roles/storage.objectViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-billing-exp-0
     role: roles/storage.objectViewer
   ? module.factory.module.projects-iam["iac-0"].google_kms_crypto_key_iam_member.service_agent_cmek["key-0.gs-project-accounts"]
@@ -1513,110 +1730,165 @@ values:
     timeouts: null
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["$custom_roles:cloudkms_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: organizations/1234567890/roles/cloudKmsViewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["$custom_roles:storage_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: organizations/1234567890/roles/storageViewer
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/accesscontextmanager.policyAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/accesscontextmanager.policyAdmin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/bigquery.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/bigquery.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/bigquery.dataViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/bigquery.dataViewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/bigquery.jobUser"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/bigquery.jobUser
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/billing.projectManager"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/billing.projectManager
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/browser"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/browser
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/cloudasset.owner"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/cloudasset.owner
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/cloudbuild.builds.editor"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/cloudbuild.builds.editor
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/cloudbuild.builds.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/cloudbuild.builds.viewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/cloudkms.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/cloudkms.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/compute.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/compute.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/compute.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/compute.viewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/container.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/container.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/container.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/container.viewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/datacatalog.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/datacatalog.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/iam.roleAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/iam.roleAdmin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/iam.serviceAccountAdmin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/iam.serviceAccountAdmin
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/iam.serviceAccountTokenCreator"]
   : condition: []
+    members:
+    - group:fabric-fast-owners@google.com
     project: ft0-prod-iac-core-0
     role: roles/iam.serviceAccountTokenCreator
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/iam.serviceAccountViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/iam.serviceAccountViewer
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/iam.workloadIdentityPoolAdmin"]
   : condition: []
+    members:
+    - group:fabric-fast-owners@google.com
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/iam.workloadIdentityPoolAdmin
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/iam.workloadIdentityPoolViewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/iam.workloadIdentityPoolViewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/logging.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/logging.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/logging.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/logging.viewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/monitoring.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/monitoring.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/monitoring.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/monitoring.viewer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/owner"]:
@@ -1626,42 +1898,67 @@ values:
     role: roles/owner
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/pubsub.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/pubsub.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/pubsub.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/pubsub.viewer
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/resourcemanager.projectIamAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/resourcemanager.projectIamAdmin
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/securitycentermanagement.admin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/securitycentermanagement.admin
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/securitycentermanagement.viewer"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/securitycentermanagement.viewer
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/servicenetworking.networksAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/servicenetworking.networksAdmin
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/serviceusage.serviceUsageAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/serviceusage.serviceUsageAdmin
   ? module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/serviceusage.serviceUsageConsumer"]
   : condition: []
+    members:
+    - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-pf-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-pf-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/serviceusage.serviceUsageConsumer
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/storage.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/storage.admin
   module.factory.module.projects-iam["iac-0"].google_project_iam_binding.authoritative["roles/storage.objectViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-iac-core-0
     role: roles/storage.objectViewer
   module.factory.module.projects-iam["log-0"].google_kms_crypto_key_iam_member.service_agent_cmek["key-0.logging"]:
@@ -1684,30 +1981,44 @@ values:
     timeouts: null
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["$custom_roles:cloudkms_viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: organizations/1234567890/roles/cloudKmsViewer
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/browser"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/browser
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/cloudkms.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/cloudkms.admin
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/logging.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/logging.admin
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/logging.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/logging.viewer
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/monitoring.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/monitoring.admin
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/monitoring.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/monitoring.viewer
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/owner"]:
@@ -1717,26 +2028,38 @@ values:
     role: roles/owner
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/pubsub.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/pubsub.admin
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/pubsub.viewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/pubsub.viewer
   ? module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/resourcemanager.projectIamAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/resourcemanager.projectIamAdmin
   ? module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/serviceusage.serviceUsageAdmin"]
   : condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/serviceusage.serviceUsageAdmin
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/storage.admin"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/storage.admin
   module.factory.module.projects-iam["log-0"].google_project_iam_binding.authoritative["roles/storage.objectViewer"]:
     condition: []
+    members:
+    - serviceAccount:iac-org-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     project: ft0-prod-audit-logs-0
     role: roles/storage.objectViewer
   module.factory.module.projects["billing-0"].data.google_bigquery_default_service_account.bq_sa[0]:
@@ -2378,6 +2701,202 @@ values:
     resource_types:
     - accesscontextmanager.googleapis.com/ServicePerimeter
     timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.alloydbDisablePublicIp"]:
+    action_type: DENY
+    condition: 'has(resource.networkConfig) &&
+
+      has(resource.networkConfig.enablePublicIp) &&
+
+      resource.networkConfig.enablePublicIp == true'
+    description: Ensure that AlloyDB instances do not have public IP addresses enabled
+    display_name: Disable public IP addresses on AlloyDB instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.alloydbDisablePublicIp
+    parent: organizations/1234567890
+    resource_types:
+    - alloydb.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.alloydbRequireAutomatedBackup"]:
+    action_type: DENY
+    condition: '!has(resource.secondaryConfig) &&
+
+      has(resource.automatedBackupPolicy) &&
+
+      resource.automatedBackupPolicy.enabled == false'
+    description: Ensure that AlloyDB clusters have automated backups enabled
+    display_name: Require AlloyDB clusters to have automated backups enabled
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.alloydbRequireAutomatedBackup
+    parent: organizations/1234567890
+    resource_types:
+    - alloydb.googleapis.com/Cluster
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.alloydbRequireContinuousBackup"]:
+    action_type: DENY
+    condition: '!has(resource.secondaryConfig) &&
+
+      has(resource.continuousBackupConfig) &&
+
+      resource.continuousBackupConfig.enabled == false'
+    description: Ensure that AlloyDB clusters have continuous backup and recovery
+      enabled
+    display_name: Require AlloyDB clusters to have continuous backup enabled
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.alloydbRequireContinuousBackup
+    parent: organizations/1234567890
+    resource_types:
+    - alloydb.googleapis.com/Cluster
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.alloydbRequireDatabaseFlags"]:
+    action_type: DENY
+    condition: "has(resource.databaseFlags) && (\n  ('log_error_verbosity' in resource.databaseFlags\
+      \ &&\n    resource.databaseFlags['log_error_verbosity'] == 'terse') ||\n  ('log_min_error_statement'\
+      \ in resource.databaseFlags &&\n    resource.databaseFlags['log_min_error_statement']\
+      \ in ['log', 'fatal', 'panic']) ||\n  ('log_min_messages' in resource.databaseFlags\
+      \ &&\n    resource.databaseFlags['log_min_messages'] in ['error', 'log', 'fatal',\
+      \ 'panic'])\n)"
+    description: Ensure AlloyDB instance logging database flags are set correctly
+      (log_error_verbosity, log_min_error_statement, log_min_messages)
+    display_name: Require AlloyDB instance database flags to be configured correctly
+      (log_error_verbosity, log_min_error_statement, log_min_messages)
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.alloydbRequireDatabaseFlags
+    parent: organizations/1234567890
+    resource_types:
+    - alloydb.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.alloydbRequireSSLConnection"]:
+    action_type: DENY
+    condition: 'has(resource.clientConnectionConfig) &&
+
+      has(resource.clientConnectionConfig.sslConfig) &&
+
+      has(resource.clientConnectionConfig.sslConfig.sslMode) &&
+
+      resource.clientConnectionConfig.sslConfig.sslMode != ''ENCRYPTED_ONLY'''
+    description: Ensure that AlloyDB instances are configured to allow only connections
+      that are encrypted with SSL/TLS
+    display_name: Require AlloyDB instances to allow only connections that are encrypted
+      with SSL/TLS
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.alloydbRequireSSLConnection
+    parent: organizations/1234567890
+    resource_types:
+    - alloydb.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.apikeysDisableKeyCreation"]:
+    action_type: DENY
+    condition: true == true
+    description: Ensure API keys cannot be created or updated
+    display_name: Deny creation and update of API keys
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.apikeysDisableKeyCreation
+    parent: organizations/1234567890
+    resource_types:
+    - apikeys.googleapis.com/Key
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.apikeysRequireApiTargetRestrictions"]:
+    action_type: DENY
+    condition: '!has(resource.restrictions) ||
+
+      resource.restrictions.apiTargets.size() == 0 ||
+
+      resource.restrictions.apiTargets.exists(target, target.service == ''cloudapis.googleapis.com'')'
+    description: Ensure API keys are restricted to specific required APIs and do not
+      allow cloudapis.googleapis.com
+    display_name: Require API target restrictions on API keys
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.apikeysRequireApiTargetRestrictions
+    parent: organizations/1234567890
+    resource_types:
+    - apikeys.googleapis.com/Key
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.apikeysRequireApplicationRestrictions"]:
+    action_type: DENY
+    condition: "!has(resource.restrictions) || !(\n  (has(resource.restrictions.androidKeyRestrictions)\
+      \ &&\n    resource.restrictions.androidKeyRestrictions.allowedApplications.size()\
+      \ > 0) ||\n  (has(resource.restrictions.iosKeyRestrictions) &&\n    resource.restrictions.iosKeyRestrictions.allowedBundleIds.size()\
+      \ > 0) ||\n  (has(resource.restrictions.browserKeyRestrictions) &&\n    resource.restrictions.browserKeyRestrictions.allowedReferrers.size()\
+      \ > 0 &&\n    resource.restrictions.browserKeyRestrictions.allowedReferrers.all(r,\n\
+      \      !r.matches('^\\\\*(?:\\\\.[a-zA-Z]+(?:/\\\\*)?)?$')\n    )) ||\n  (has(resource.restrictions.serverKeyRestrictions)\
+      \ &&\n    resource.restrictions.serverKeyRestrictions.allowedIps.size() > 0\
+      \ &&\n    resource.restrictions.serverKeyRestrictions.allowedIps.all(ip,\n \
+      \     !ip.matches('^[./:0]+$')\n    ))\n)"
+    description: Ensure API keys configure application restrictions without broad
+      wildcards or 0.0.0.0/0
+    display_name: Require application restrictions on API keys
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.apikeysRequireApplicationRestrictions
+    parent: organizations/1234567890
+    resource_types:
+    - apikeys.googleapis.com/Key
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.artifactregistryRequireCleanupPolicies"]:
+    action_type: ALLOW
+    condition: 'resource.cleanupPolicies.size() > 0 &&
+
+      resource.cleanupPolicyDryRun == false'
+    description: Ensure that Artifact Registry repositories define at least one cleanup
+      policy with dry-run disabled
+    display_name: Require Artifact Registry repositories to configure active cleanup
+      policies
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.artifactregistryRequireCleanupPolicies
+    parent: organizations/1234567890
+    resource_types:
+    - artifactregistry.googleapis.com/Repository
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudArmorRequireCveCanaryRule"]:
+    action_type: DENY
+    condition: "(resource.type == '' || resource.type == 'CLOUD_ARMOR') &&\n!resource.rules.exists(rule,\n\
+      \  has(rule.match) && (\n    rule.match.versionedExpr == 'cve-canary' ||\n \
+      \   (has(rule.match.expr) && rule.match.expr.expression.contains('cve-canary'))\n\
+      \  )\n)"
+    description: Ensure Cloud Armor backend security policies include a rule evaluating
+      the cve-canary WAF expression
+    display_name: Require cve-canary WAF rule in Cloud Armor security policies
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudArmorRequireCveCanaryRule
+    parent: organizations/1234567890
+    resource_types:
+    - compute.googleapis.com/SecurityPolicy
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudArmorRequireLayer7DdosDefense"]:
+    action_type: DENY
+    condition: "(resource.type == '' || resource.type == 'CLOUD_ARMOR') && (\n  !has(resource.adaptiveProtectionConfig)\
+      \ ||\n  !has(resource.adaptiveProtectionConfig.layer7DdosDefenseConfig) ||\n\
+      \  !resource.adaptiveProtectionConfig.layer7DdosDefenseConfig.enable\n)"
+    description: Ensure Cloud Armor backend security policies have Adaptive Protection
+      Layer 7 DDoS Defense enabled
+    display_name: Require Layer 7 DDoS Defense on Cloud Armor security policies
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudArmorRequireLayer7DdosDefense
+    parent: organizations/1234567890
+    resource_types:
+    - compute.googleapis.com/SecurityPolicy
+    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudbuildDisableWorkerPoolExternalIP"]:
     action_type: DENY
     condition: (resource.privatePoolV1Config.networkConfig.egressOption != "NO_PUBLIC_EGRESS")
@@ -2407,16 +2926,17 @@ values:
     resource_types:
     - cloudkms.googleapis.com/CryptoKey
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudkmsAllowedProtectionLevel"]:
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudkmsAllowedPurpose"]:
     action_type: DENY
-    condition: has(resource.versionTemplate.protectionLevel) && resource.versionTemplate.protectionLevel
-      in ["SOFTWARE"] == false
-    description: Ensure the protection level for Cloud KMS keys is configured correctly
-    display_name: Require Cloud KMS keys protection level to be configured correctly
+    condition: 'has(resource.purpose) &&
+
+      !(resource.purpose in [''ENCRYPT_DECRYPT'', ''ASYMMETRIC_SIGN'', ''ASYMMETRIC_DECRYPT''])'
+    description: Ensure the purpose for Cloud KMS keys is configured for approved
+      encryption or signing operations
+    display_name: Restrict Cloud KMS keys to approved purposes
     method_types:
     - CREATE
-    - UPDATE
-    name: custom.cloudkmsAllowedProtectionLevel
+    name: custom.cloudkmsAllowedPurpose
     parent: organizations/1234567890
     resource_types:
     - cloudkms.googleapis.com/CryptoKey
@@ -2466,19 +2986,6 @@ values:
     resource_types:
     - run.googleapis.com/Job
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudrunJobRequireBinaryAuthorization"]:
-    action_type: DENY
-    condition: '!(''run.googleapis.com/binary-authorization'' in resource.metadata.annotations)'
-    description: Enforce that Cloud Run Job are using binary authorization
-    display_name: Disable creation of Cloud Run Job without Binary Authorization
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.cloudrunJobRequireBinaryAuthorization
-    parent: organizations/1234567890
-    resource_types:
-    - run.googleapis.com/Job
-    timeouts: null
   ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudrunServiceDisableDefaultServiceAccount"]
   : action_type: DENY
     condition: resource.spec.template.spec.serviceAccountName.endsWith('@developer.gserviceaccount.com')
@@ -2493,31 +3000,70 @@ values:
     resource_types:
     - run.googleapis.com/Service
     timeouts: null
-  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudrunServiceRequireBinaryAuthorization"]
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlDisablePostgreSQLLogHostnameFlag"]
   : action_type: DENY
-    condition: '!(''run.googleapis.com/binary-authorization'' in resource.metadata.annotations)'
-    description: Enforce that Cloud Run Service are using binary authorization
-    display_name: Disable creation of Cloud Run Service without Binary Authorization
+    condition: 'resource.databaseVersion.startsWith(''POSTGRES'') &&
+
+      resource.settings.databaseFlags.exists(f, f.name == ''log_hostname'' && f.value
+      != ''off'')'
+    description: Ensure Cloud SQL for PostgreSQL instances do not enable the log_hostname
+      database flag
+    display_name: Disable log_hostname flag for Cloud SQL PostgreSQL instances
     method_types:
     - CREATE
     - UPDATE
-    name: custom.cloudrunServiceRequireBinaryAuthorization
+    name: custom.cloudsqlDisablePostgreSQLLogHostnameFlag
     parent: organizations/1234567890
     resource_types:
-    - run.googleapis.com/Service
+    - sqladmin.googleapis.com/Instance
     timeouts: null
-  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlDisablePublicAuthorizedNetworks"]
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlDisablePostgreSQLLogParserStatsFlag"]
   : action_type: DENY
-    condition: resource.settings.ipConfiguration.authorizedNetworks.exists(network,
-      network.value == '0.0.0.0/0')
-    description: Ensure That Cloud SQL database instances do not implicitly whitelist
-      all public IP addresses
-    display_name: Require Cloud SQL database instances to not whitelist all public
-      IP addresses
+    condition: 'resource.databaseVersion.startsWith(''POSTGRES'') &&
+
+      resource.settings.databaseFlags.exists(f, f.name == ''log_parser_stats'' &&
+      f.value != ''off'')'
+    description: Ensure Cloud SQL for PostgreSQL instances do not enable the log_parser_stats
+      database flag
+    display_name: Disable log_parser_stats flag for Cloud SQL PostgreSQL instances
     method_types:
     - CREATE
     - UPDATE
-    name: custom.cloudsqlDisablePublicAuthorizedNetworks
+    name: custom.cloudsqlDisablePostgreSQLLogParserStatsFlag
+    parent: organizations/1234567890
+    resource_types:
+    - sqladmin.googleapis.com/Instance
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlDisablePostgreSQLLogPlannerStatsFlag"]
+  : action_type: DENY
+    condition: 'resource.databaseVersion.startsWith(''POSTGRES'') &&
+
+      resource.settings.databaseFlags.exists(f, f.name == ''log_planner_stats'' &&
+      f.value != ''off'')'
+    description: Ensure Cloud SQL for PostgreSQL instances do not enable the log_planner_stats
+      database flag
+    display_name: Disable log_planner_stats flag for Cloud SQL PostgreSQL instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudsqlDisablePostgreSQLLogPlannerStatsFlag
+    parent: organizations/1234567890
+    resource_types:
+    - sqladmin.googleapis.com/Instance
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlDisablePostgreSQLLogStatementStatsFlag"]
+  : action_type: DENY
+    condition: 'resource.databaseVersion.startsWith(''POSTGRES'') &&
+
+      resource.settings.databaseFlags.exists(f, f.name == ''log_statement_stats''
+      && f.value != ''off'')'
+    description: Ensure Cloud SQL for PostgreSQL instances do not enable the log_statement_stats
+      database flag
+    display_name: Disable log_statement_stats flag for Cloud SQL PostgreSQL instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudsqlDisablePostgreSQLLogStatementStatsFlag
     parent: organizations/1234567890
     resource_types:
     - sqladmin.googleapis.com/Instance
@@ -2562,6 +3108,25 @@ values:
     - CREATE
     - UPDATE
     name: custom.cloudsqlRequireHighAvailability
+    parent: organizations/1234567890
+    resource_types:
+    - sqladmin.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlRequireMaintenanceWindow"]:
+    action_type: DENY
+    condition: '!has(resource.settings) ||
+
+      !has(resource.settings.maintenanceWindow) ||
+
+      !has(resource.settings.maintenanceWindow.day) ||
+
+      resource.settings.maintenanceWindow.day <= 0'
+    description: Ensure Cloud SQL instances have a maintenance window day configured
+    display_name: Require maintenance window on Cloud SQL instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudsqlRequireMaintenanceWindow
     parent: organizations/1234567890
     resource_types:
     - sqladmin.googleapis.com/Instance
@@ -2642,6 +3207,40 @@ values:
     resource_types:
     - sqladmin.googleapis.com/Instance
     timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlRequirePostgreSQLLogDurationFlag"]
+  : action_type: DENY
+    condition: 'resource.databaseVersion.startsWith(''POSTGRES'') &&
+
+      !resource.settings.databaseFlags.exists(f, f.name == ''log_duration'' && f.value
+      == ''on'')'
+    description: Ensure Cloud SQL for PostgreSQL instances have the log_duration database
+      flag set to on
+    display_name: Require log_duration flag set to on for Cloud SQL PostgreSQL instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudsqlRequirePostgreSQLLogDurationFlag
+    parent: organizations/1234567890
+    resource_types:
+    - sqladmin.googleapis.com/Instance
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlRequirePostgreSQLLogTempFilesFlag"]
+  : action_type: DENY
+    condition: 'resource.databaseVersion.startsWith(''POSTGRES'') &&
+
+      !resource.settings.databaseFlags.exists(f, f.name == ''log_temp_files'' && f.value
+      == ''0'')'
+    description: Ensure Cloud SQL for PostgreSQL instances have the log_temp_files
+      database flag set to 0
+    display_name: Require log_temp_files flag set to 0 for Cloud SQL PostgreSQL instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.cloudsqlRequirePostgreSQLLogTempFilesFlag
+    parent: organizations/1234567890
+    resource_types:
+    - sqladmin.googleapis.com/Instance
+    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.cloudsqlRequireRootPassword"]:
     action_type: DENY
     condition: resource.settings.passwordValidationPolicy.minLength == 0
@@ -2695,6 +3294,40 @@ values:
     resource_types:
     - sqladmin.googleapis.com/Instance
     timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.composerRequireMaintenanceWindow"]:
+    action_type: DENY
+    condition: '!has(resource.config) ||
+
+      !has(resource.config.maintenanceWindow) ||
+
+      resource.config.maintenanceWindow.recurrence == '''''
+    description: Ensure Cloud Composer environments have a maintenance window recurrence
+      configured
+    display_name: Require maintenance window on Cloud Composer environments
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.composerRequireMaintenanceWindow
+    parent: organizations/1234567890
+    resource_types:
+    - composer.googleapis.com/Environment
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.dataprocAllowedImageVersions"]:
+    action_type: DENY
+    condition: "has(resource.config.softwareConfig.imageVersion) && (\n  resource.config.softwareConfig.imageVersion.startsWith('1.')\
+      \ ||\n  resource.config.softwareConfig.imageVersion.startsWith('2.0') ||\n \
+      \ resource.config.softwareConfig.imageVersion.startsWith('2.1')\n)"
+    description: Ensure Dataproc clusters do not use unsupported image versions (1.x,
+      2.0, 2.1)
+    display_name: Require Dataproc clusters to use supported image versions
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.dataprocAllowedImageVersions
+    parent: organizations/1234567890
+    resource_types:
+    - dataproc.googleapis.com/Cluster
+    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.dataprocDisableDefaultServiceAccount"]:
     action_type: DENY
     condition: "has(resource.config.gceClusterConfig.serviceAccount) == false ||\n\
@@ -2706,33 +3339,6 @@ values:
     - CREATE
     - UPDATE
     name: custom.dataprocDisableDefaultServiceAccount
-    parent: organizations/1234567890
-    resource_types:
-    - dataproc.googleapis.com/Cluster
-    timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.dataprocRequireDiskCmekEncryption"]:
-    action_type: DENY
-    condition: has(resource.config.encryptionConfig.gcePdKmsKeyName) == false
-    description: Enforce that the Dataproc cluster is created with an CMEK encryption
-      key.
-    display_name: Enable Dataproc CMEK encryption
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.dataprocRequireDiskCmekEncryption
-    parent: organizations/1234567890
-    resource_types:
-    - dataproc.googleapis.com/Cluster
-    timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.dataprocRequireInternalIp"]:
-    action_type: DENY
-    condition: resource.config.gceClusterConfig.internalIpOnly == false
-    description: Enforce that the Dataproc cluster is created with Internal IPs only
-    display_name: Require Dataproc with internal IPs
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.dataprocRequireInternalIp
     parent: organizations/1234567890
     resource_types:
     - dataproc.googleapis.com/Cluster
@@ -2750,6 +3356,21 @@ values:
     parent: organizations/1234567890
     resource_types:
     - dataproc.googleapis.com/Cluster
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.discoveryengineDisableNonGcpDataStores"]:
+    action_type: ALLOW
+    condition: "resource.contentConfig in [\n  '',\n  'CONTENT_CONFIG_UNSPECIFIED',\n\
+      \  'NO_CONTENT',\n  'CONTENT_REQUIRED'\n]"
+    description: Ensure Vertex AI Agent Builder (Discovery Engine) data stores only
+      use standard GCP content configurations (NO_CONTENT or CONTENT_REQUIRED)
+    display_name: Restrict Discovery Engine data stores to GCP content configurations
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.discoveryengineDisableNonGcpDataStores
+    parent: organizations/1234567890
+    resource_types:
+    - discoveryengine.googleapis.com/DataStore
     timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.dnsAllowedSigningAlgorithms"]:
     action_type: DENY
@@ -3384,19 +4005,6 @@ values:
     resource_types:
     - container.googleapis.com/Cluster
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeDisableLegacyAbac"]:
-    action_type: DENY
-    condition: resource.legacyAbac.enabled == true
-    description: Enforce that GKE clusters is configured with no legacy ABAC enabled
-    display_name: Disable legacy ABAC
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.gkeDisableLegacyAbac
-    parent: organizations/1234567890
-    resource_types:
-    - container.googleapis.com/Cluster
-    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeDisableLegacyMetadataEndpoints"]:
     action_type: DENY
     condition: '(''disable-legacy-endpoints'' in resource.config.metadata &&
@@ -3427,19 +4035,6 @@ values:
     resource_types:
     - container.googleapis.com/NodePool
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireConfidentialNodes"]:
-    action_type: DENY
-    condition: resource.confidentialNodes.enabled == false
-    description: Enforce that the GKE clusters is using confidential nodes
-    display_name: Require confidential nodes
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.gkeRequireConfidentialNodes
-    parent: organizations/1234567890
-    resource_types:
-    - container.googleapis.com/Cluster
-    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireDataplaneV2"]:
     action_type: DENY
     condition: resource.networkConfig.datapathProvider != 'ADVANCED_DATAPATH'
@@ -3453,34 +4048,6 @@ values:
     resource_types:
     - container.googleapis.com/Cluster
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireGKEMetadataServer"]:
-    action_type: DENY
-    condition: resource.config.workloadMetadataConfig.mode != 'GKE_METADATA'
-    description: Enforce that GKE clusters are configured with GKE metadata server
-      enabled
-    display_name: Require GKE metadata server
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.gkeRequireGKEMetadataServer
-    parent: organizations/1234567890
-    resource_types:
-    - container.googleapis.com/NodePool
-    timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireIntegrityMonitoring"]:
-    action_type: DENY
-    condition: resource.config.shieldedInstanceConfig.enableIntegrityMonitoring ==
-      false
-    description: Enforce that GKE nodes are configured with integrity monitoring enabled
-    display_name: Enable integrity monitoring
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.gkeRequireIntegrityMonitoring
-    parent: organizations/1234567890
-    resource_types:
-    - container.googleapis.com/NodePool
-    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireIntraNodeVisibility"]:
     action_type: DENY
     condition: resource.networkConfig.enableIntraNodeVisibility == false
@@ -3490,6 +4057,22 @@ values:
     - CREATE
     - UPDATE
     name: custom.gkeRequireIntraNodeVisibility
+    parent: organizations/1234567890
+    resource_types:
+    - container.googleapis.com/Cluster
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireMaintenanceWindow"]:
+    action_type: DENY
+    condition: "!has(resource.maintenancePolicy) ||\n!has(resource.maintenancePolicy.window)\
+      \ || (\n  !has(resource.maintenancePolicy.window.dailyMaintenanceWindow) &&\n\
+      \  !has(resource.maintenancePolicy.window.recurringWindow)\n)"
+    description: Ensure GKE clusters have a daily or recurring maintenance window
+      configured
+    display_name: Require maintenance window on GKE clusters
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.gkeRequireMaintenanceWindow
     parent: organizations/1234567890
     resource_types:
     - container.googleapis.com/Cluster
@@ -3547,15 +4130,18 @@ values:
     resource_types:
     - container.googleapis.com/NodePool
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireNodePoolCMEKEncryption"]:
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireNodePoolAutoscaling"]:
     action_type: DENY
-    condition: has(resource.config.bootDiskKmsKey) == false
-    description: Enforce that GKE nodes are configured with CMEK Encryption
-    display_name: Require NodePool CMEK Encryption
+    condition: '(!has(resource.autopilotConfig) || !resource.autopilotConfig.enabled)
+      &&
+
+      (!has(resource.autoscaling) || !resource.autoscaling.enabled)'
+    description: Ensure GKE standard cluster node pools have cluster autoscaler enabled
+    display_name: Require autoscaling enabled on GKE node pools
     method_types:
     - CREATE
     - UPDATE
-    name: custom.gkeRequireNodePoolCMEKEncryption
+    name: custom.gkeRequireNodePoolAutoscaling
     parent: organizations/1234567890
     resource_types:
     - container.googleapis.com/NodePool
@@ -3615,6 +4201,21 @@ values:
     resource_types:
     - container.googleapis.com/NodePool
     timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireSecurityPosture"]:
+    action_type: DENY
+    condition: '!has(resource.securityPostureConfig) ||
+
+      !(resource.securityPostureConfig.mode in [''BASIC'', ''ENTERPRISE''])'
+    description: Ensure GKE clusters have Security Posture mode set to BASIC or ENTERPRISE
+    display_name: Require Security Posture enabled on GKE clusters
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.gkeRequireSecurityPosture
+    parent: organizations/1234567890
+    resource_types:
+    - container.googleapis.com/Cluster
+    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.gkeRequireVPCNativeCluster"]:
     action_type: DENY
     condition: resource.ipAllocationPolicy.useIpAliases == false
@@ -3627,22 +4228,6 @@ values:
     parent: organizations/1234567890
     resource_types:
     - container.googleapis.com/Cluster
-    timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.iamAllowedMembers"]:
-    action_type: DENY
-    condition: "resource.bindings.exists(binding,\n  binding.members.exists(member,\n\
-      \    MemberSubjectStartsWith(member, ['user:', 'group:']) &&\n    !MemberSubjectEndsWith(member,\
-      \ ['@example.org', 'group:fabric-fast-owners@google.com'])\n  )\n)"
-    description: Ensure no binding are done with members outside the organization
-      domain
-    display_name: Deny principals and members outside the organization domain
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.iamAllowedMembers
-    parent: organizations/1234567890
-    resource_types:
-    - iam.googleapis.com/AllowPolicy
     timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.iamDisableAdminServiceAccount"]:
     action_type: DENY
@@ -3704,21 +4289,6 @@ values:
     resource_types:
     - iam.googleapis.com/AllowPolicy
     timeouts: null
-  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.iamDisablePublicBindings"]:
-    action_type: DENY
-    condition: "resource.bindings.exists(binding,\n  binding.members.exists(member,\n\
-      \    MemberSubjectMatches(member, ['allUsers', 'allAuthenticatedUsers'])\n \
-      \ )\n)"
-    description: Ensure no use of public bindings (allUsers, allAuthenticatedUsers)
-    display_name: Deny use of public access bindings with allUsers or allAuthenticatedUsers
-    method_types:
-    - CREATE
-    - UPDATE
-    name: custom.iamDisablePublicBindings
-    parent: organizations/1234567890
-    resource_types:
-    - iam.googleapis.com/AllowPolicy
-    timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.iamDisableRedisAdminRoles"]:
     action_type: DENY
     condition: "resource.bindings.exists(binding,\n  binding.members.exists(member,\n\
@@ -3735,6 +4305,56 @@ values:
     parent: organizations/1234567890
     resource_types:
     - iam.googleapis.com/AllowPolicy
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.iamLimitKmsCryptoKeyUsers"]:
+    action_type: DENY
+    condition: "resource.bindings.exists(binding,\n  RoleNameMatches(binding.role,\
+      \ [\n    'roles/cloudkms.cryptoKeyEncrypterDecrypter',\n    'roles/cloudkms.cryptoKeyEncrypter',\n\
+      \    'roles/cloudkms.cryptoKeyDecrypter',\n    'roles/cloudkms.signer',\n  \
+      \  'roles/cloudkms.signerVerifier'\n  ]) &&\n  binding.members.size() > 3\n)"
+    description: Ensure IAM policy updates for Cloud KMS crypto key roles do not grant
+      more than 3 principals in a single binding change
+    display_name: Limit Cloud KMS crypto key role bindings to at most 3 principals
+      per policy change
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.iamLimitKmsCryptoKeyUsers
+    parent: organizations/1234567890
+    resource_types:
+    - iam.googleapis.com/AllowPolicy
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.iamRestrictFirestoreServiceAccountAccess"]
+  : action_type: DENY
+    condition: "resource.bindings.exists(binding,\n  RoleNameContains(binding.role,\
+      \ ['firestore', 'datastore']) &&\n  binding.members.exists(member,\n    MemberSubjectStartsWith(member,\
+      \ ['serviceAccount:']) &&\n    !MemberSubjectEndsWith(member, ['@gcp-sa-firestore.iam.gserviceaccount.com'])\n\
+      \  )\n)"
+    description: Ensure IAM roles containing firestore or datastore are not granted
+      to service accounts other than the Firestore service agent
+    display_name: Restrict Firestore and Datastore roles on service accounts to the
+      Firestore service agent
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.iamRestrictFirestoreServiceAccountAccess
+    parent: organizations/1234567890
+    resource_types:
+    - iam.googleapis.com/AllowPolicy
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.loggingRequireLogBucketRetention90Days"]:
+    action_type: DENY
+    condition: resource.retentionDays < 90
+    description: Ensure Cloud Logging log buckets are configured with a retention
+      period of at least 90 days
+    display_name: Require at least 90 days retention on Cloud Logging log buckets
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.loggingRequireLogBucketRetention90Days
+    parent: organizations/1234567890
+    resource_types:
+    - logging.googleapis.com/LogBucket
     timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.networkDisableTargetHTTPProxy"]:
     action_type: DENY
@@ -3796,19 +4416,54 @@ values:
     resource_types:
     - compute.googleapis.com/Network
     timeouts: null
-  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.networkRequireSubnetPrivateGoogleAccess"]
-  : action_type: DENY
-    condition: '!resource.privateIpGoogleAccess && resource.purpose in [''REGIONAL_MANAGED_PROXY'',
-      ''GLOBAL_MANAGED_PROXY''] == false'
-    description: Enforce that the VPC network subnets are configured with private
-      Google access
-    display_name: Require Private Google Access
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.redisRequireMaintenancePolicy"]:
+    action_type: DENY
+    condition: '!has(resource.maintenancePolicy) ||
+
+      resource.maintenancePolicy.weeklyMaintenanceWindow.size() == 0'
+    description: Ensure Memorystore for Redis instances have a weekly maintenance
+      window configured
+    display_name: Require maintenance policy on Memorystore for Redis instances
     method_types:
     - CREATE
-    name: custom.networkRequireSubnetPrivateGoogleAccess
+    - UPDATE
+    name: custom.redisRequireMaintenancePolicy
     parent: organizations/1234567890
     resource_types:
-    - compute.googleapis.com/Subnetwork
+    - redis.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageAllowedStorageClasses"]:
+    action_type: DENY
+    condition: "(has(resource.storageClass) &&\n  !(resource.storageClass in ['STANDARD',\
+      \ 'NEARLINE', 'COLDLINE', 'ARCHIVE'])) ||\n(has(resource.lifecycle) &&\n  has(resource.lifecycle.rule)\
+      \ &&\n  resource.lifecycle.rule.exists(r,\n    has(r.action) &&\n    r.action.type\
+      \ == 'SetStorageClass' &&\n    has(r.action.storageClass) &&\n    !(r.action.storageClass\
+      \ in ['STANDARD', 'NEARLINE', 'COLDLINE', 'ARCHIVE'])\n  ))"
+    description: Enforce that Cloud Storage buckets and SetStorageClass lifecycle
+      rules use an approved storage class (STANDARD, NEARLINE, COLDLINE, or ARCHIVE)
+    display_name: Restrict Cloud Storage bucket storage classes
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.storageAllowedStorageClasses
+    parent: organizations/1234567890
+    resource_types:
+    - storage.googleapis.com/Bucket
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageRequireBucketLogging"]:
+    action_type: DENY
+    condition: '!has(resource.logging) || !has(resource.logging.logBucket) || resource.logging.logBucket
+      == '''''
+    description: Enforce that Cloud Storage buckets have access and storage logging
+      configured
+    display_name: Require logging on Cloud Storage buckets
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.storageRequireBucketLogging
+    parent: organizations/1234567890
+    resource_types:
+    - storage.googleapis.com/Bucket
     timeouts: null
   module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageRequireBucketObjectVersionning"]:
     action_type: DENY
@@ -3822,6 +4477,198 @@ values:
     parent: organizations/1234567890
     resource_types:
     - storage.googleapis.com/Bucket
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageRequireDeleteLifecycleIsLive"]:
+    action_type: ALLOW
+    condition: "has(resource.lifecycle) &&\nresource.lifecycle.rule.exists(\n  r,\n\
+      \  r.action.type == 'Delete' && r.condition.isLive == true\n)"
+    description: Ensure that Cloud Storage buckets configure a lifecycle Delete rule
+      with isLive set to true
+    display_name: Require Cloud Storage buckets to have a Delete lifecycle rule with
+      isLive enabled
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.storageRequireDeleteLifecycleIsLive
+    parent: organizations/1234567890
+    resource_types:
+    - storage.googleapis.com/Bucket
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageRequireLabels"]:
+    action_type: ALLOW
+    condition: resource.labels.size() > 0
+    description: Ensure that Cloud Storage buckets are configured with at least one
+      resource label for classification and inventory
+    display_name: Require Cloud Storage buckets to have labels
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.storageRequireLabels
+    parent: organizations/1234567890
+    resource_types:
+    - storage.googleapis.com/Bucket
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageRequireOwnerLabel"]:
+    action_type: ALLOW
+    condition: '''owner'' in resource.labels &&
+
+      resource.labels[''owner''] != '''''
+    description: Ensure that Cloud Storage buckets define a non-empty owner label
+    display_name: Require Cloud Storage buckets to have a non-empty owner label
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.storageRequireOwnerLabel
+    parent: organizations/1234567890
+    resource_types:
+    - storage.googleapis.com/Bucket
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.storageRequireSetStorageClassLifecycle"]:
+    action_type: DENY
+    condition: '!has(resource.lifecycle) ||
+
+      !has(resource.lifecycle.rule) ||
+
+      !resource.lifecycle.rule.exists(r, has(r.action) && r.action.type == ''SetStorageClass'')'
+    description: Enforce that Cloud Storage buckets configure a SetStorageClass lifecycle
+      management rule
+    display_name: Require SetStorageClass lifecycle rule on Cloud Storage buckets
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.storageRequireSetStorageClassLifecycle
+    parent: organizations/1234567890
+    resource_types:
+    - storage.googleapis.com/Bucket
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.vertexaiRuntimeTemplateDisableInternetAccess"]
+  : action_type: DENY
+    condition: 'has(resource.networkSpec) &&
+
+      has(resource.networkSpec.enableInternetAccess) &&
+
+      resource.networkSpec.enableInternetAccess == true'
+    description: Prevent Vertex AI Colab Enterprise runtime templates from having
+      public internet access enabled
+    display_name: Disable internet access on Vertex AI runtime templates
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.vertexaiRuntimeTemplateDisableInternetAccess
+    parent: organizations/1234567890
+    resource_types:
+    - aiplatform.googleapis.com/NotebookRuntimeTemplate
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.vertexaiRuntimeTemplateRequireIdleShutdown"]
+  : action_type: DENY
+    condition: 'has(resource.idleShutdownConfig) &&
+
+      has(resource.idleShutdownConfig.idleShutdownDisabled) &&
+
+      resource.idleShutdownConfig.idleShutdownDisabled == true'
+    description: Enforce that Vertex AI Colab Enterprise runtime templates have automatic
+      idle shutdown enabled
+    display_name: Require idle shutdown on Vertex AI runtime templates
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.vertexaiRuntimeTemplateRequireIdleShutdown
+    parent: organizations/1234567890
+    resource_types:
+    - aiplatform.googleapis.com/NotebookRuntimeTemplate
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.vertexaiRuntimeTemplateRequireSecureBoot"]
+  : action_type: DENY
+    condition: '!has(resource.shieldedVmConfig) ||
+
+      !has(resource.shieldedVmConfig.enableSecureBoot) ||
+
+      resource.shieldedVmConfig.enableSecureBoot == false'
+    description: Enforce that Vertex AI Colab Enterprise runtime templates have Secure
+      Boot enabled
+    display_name: Enable Secure Boot on Vertex AI runtime templates
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.vertexaiRuntimeTemplateRequireSecureBoot
+    parent: organizations/1234567890
+    resource_types:
+    - aiplatform.googleapis.com/NotebookRuntimeTemplate
+    timeouts: null
+  ? module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.vertexaiWorkbenchDisableDefaultServiceAccount"]
+  : action_type: DENY
+    condition: "!has(resource.gceSetup) ||\n!has(resource.gceSetup.serviceAccounts)\
+      \ ||\nresource.gceSetup.serviceAccounts.size() == 0 ||\nresource.gceSetup.serviceAccounts.exists(\n\
+      \  sa,\n  sa.email == '' ||\n  sa.email == 'default' ||\n  sa.email.endsWith('-compute@developer.gserviceaccount.com')\n\
+      )"
+    description: Prevent Vertex AI Workbench instances from using the default Compute
+      Engine service account
+    display_name: Disable default service account on Vertex AI Workbench instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.vertexaiWorkbenchDisableDefaultServiceAccount
+    parent: organizations/1234567890
+    resource_types:
+    - notebooks.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.vertexaiWorkbenchRequireDeleteToTrash"]:
+    action_type: DENY
+    condition: '!has(resource.gceSetup) ||
+
+      !has(resource.gceSetup.systemMetadata) ||
+
+      !(''notebook-enable-delete-to-trash'' in resource.gceSetup.systemMetadata) ||
+
+      resource.gceSetup.systemMetadata[''notebook-enable-delete-to-trash''] != ''true'''
+    description: Enforce that Vertex AI Workbench instances have the delete to trash
+      feature enabled
+    display_name: Enable delete to trash on Vertex AI Workbench instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.vertexaiWorkbenchRequireDeleteToTrash
+    parent: organizations/1234567890
+    resource_types:
+    - notebooks.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_custom_constraint.constraint["custom.vertexaiWorkbenchRequireSecureBoot"]:
+    action_type: DENY
+    condition: '!has(resource.gceSetup) ||
+
+      !has(resource.gceSetup.shieldedInstanceConfig) ||
+
+      !has(resource.gceSetup.shieldedInstanceConfig.enableSecureBoot) ||
+
+      resource.gceSetup.shieldedInstanceConfig.enableSecureBoot == false'
+    description: Enforce that Vertex AI Workbench instances are configured with Secure
+      Boot enabled
+    display_name: Enable Secure Boot on Vertex AI Workbench instances
+    method_types:
+    - CREATE
+    - UPDATE
+    name: custom.vertexaiWorkbenchRequireSecureBoot
+    parent: organizations/1234567890
+    resource_types:
+    - notebooks.googleapis.com/Instance
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["ainotebooks.accessMode"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/ainotebooks.accessMode
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: null
+        parameters: null
+        values:
+        - allowed_values:
+          - service-account
+          denied_values: null
     timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["ainotebooks.disableFileDownloads"]:
     dry_run_spec: []
@@ -3841,6 +4688,36 @@ values:
   module.organization-iam[0].google_org_policy_policy.default["ainotebooks.disableRootAccess"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/ainotebooks.disableRootAccess
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["ainotebooks.disableTerminal"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/ainotebooks.disableTerminal
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["ainotebooks.requireAutoUpgradeSchedule"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/ainotebooks.requireAutoUpgradeSchedule
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -4030,21 +4907,6 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["compute.disableGuestAttributesAccess"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/compute.disableGuestAttributesAccess
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["compute.disableInternetNetworkEndpointGroup"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/compute.disableInternetNetworkEndpointGroup
@@ -4060,24 +4922,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["compute.disableNestedVirtualization"]:
+  module.organization-iam[0].google_org_policy_policy.default["compute.disableSshInBrowser"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/compute.disableNestedVirtualization
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["compute.disableSerialPortAccess"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/compute.disableSerialPortAccess
+    name: organizations/1234567890/policies/compute.disableSshInBrowser
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -4135,6 +4982,51 @@ values:
         parameters: null
         values: []
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.disableGuestAttributesAccess"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/compute.managed.disableGuestAttributesAccess
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.disableNestedVirtualization"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/compute.managed.disableNestedVirtualization
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.disableSerialPortAccess"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/compute.managed.disableSerialPortAccess
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["compute.managed.disableSerialPortLogging"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/compute.managed.disableSerialPortLogging
@@ -4148,6 +5040,51 @@ values:
         deny_all: null
         enforce: 'TRUE'
         parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.requireOsConfig"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/compute.managed.requireOsConfig
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.requireOsLogin"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/compute.managed.requireOsLogin
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.restrictProtocolForwardingCreationForTypes"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/compute.managed.restrictProtocolForwardingCreationForTypes
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: '{"allowedSchemes":["INTERNAL"]}'
         values: []
     timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["compute.managed.vmCanIpForward"]:
@@ -4165,9 +5102,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["compute.requireOsLogin"]:
+  module.organization-iam[0].google_org_policy_policy.default["compute.managed.vmExternalIpAccess"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/compute.requireOsLogin
+    name: organizations/1234567890/policies/compute.managed.vmExternalIpAccess
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -4293,24 +5230,6 @@ values:
         enforce: null
         parameters: null
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["compute.restrictProtocolForwardingCreationForTypes"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/compute.restrictProtocolForwardingCreationForTypes
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: null
-        parameters: null
-        values:
-        - allowed_values:
-          - is:INTERNAL
-          denied_values: null
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["compute.restrictSharedVpcHostProjects"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/compute.restrictSharedVpcHostProjects
@@ -4414,21 +5333,6 @@ values:
           - is:projects/rocky-linux-accelerator-cloud
           - is:projects/ubuntu-os-accelerator-images
           denied_values: null
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["compute.vmExternalIpAccess"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/compute.vmExternalIpAccess
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: 'TRUE'
-        enforce: null
-        parameters: null
-        values: []
     timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["container.managed.disableABAC"]:
     dry_run_spec: []
@@ -4655,6 +5559,96 @@ values:
         parameters: null
         values: []
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.alloydbDisablePublicIp"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.alloydbDisablePublicIp
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.alloydbRequireAutomatedBackup"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.alloydbRequireAutomatedBackup
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.alloydbRequireContinuousBackup"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.alloydbRequireContinuousBackup
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.alloydbRequireDatabaseFlags"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.alloydbRequireDatabaseFlags
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.alloydbRequireSSLConnection"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.alloydbRequireSSLConnection
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.apikeysRequireApiTargetRestrictions"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.apikeysRequireApiTargetRestrictions
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.cloudbuildDisableWorkerPoolExternalIP"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.cloudbuildDisableWorkerPoolExternalIP
@@ -4685,9 +5679,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.cloudkmsAllowedProtectionLevel"]:
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudkmsAllowedPurpose"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/custom.cloudkmsAllowedProtectionLevel
+    name: organizations/1234567890/policies/custom.cloudkmsAllowedPurpose
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -4745,21 +5739,6 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.cloudrunJobRequireBinaryAuthorization"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.cloudrunJobRequireBinaryAuthorization
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.cloudrunServiceDisableDefaultServiceAccount"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.cloudrunServiceDisableDefaultServiceAccount
@@ -4775,9 +5754,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.cloudrunServiceRequireBinaryAuthorization"]:
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlDisablePostgreSQLLogHostnameFlag"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/custom.cloudrunServiceRequireBinaryAuthorization
+    name: organizations/1234567890/policies/custom.cloudsqlDisablePostgreSQLLogHostnameFlag
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -4790,9 +5769,39 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlDisablePublicAuthorizedNetworks"]:
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlDisablePostgreSQLLogParserStatsFlag"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/custom.cloudsqlDisablePublicAuthorizedNetworks
+    name: organizations/1234567890/policies/custom.cloudsqlDisablePostgreSQLLogParserStatsFlag
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlDisablePostgreSQLLogPlannerStatsFlag"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.cloudsqlDisablePostgreSQLLogPlannerStatsFlag
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlDisablePostgreSQLLogStatementStatsFlag"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.cloudsqlDisablePostgreSQLLogStatementStatsFlag
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -4910,6 +5919,36 @@ values:
         parameters: null
         values: []
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlRequirePostgreSQLLogDurationFlag"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.cloudsqlRequirePostgreSQLLogDurationFlag
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlRequirePostgreSQLLogTempFilesFlag"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.cloudsqlRequirePostgreSQLLogTempFilesFlag
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.cloudsqlRequireRootPassword"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.cloudsqlRequireRootPassword
@@ -4955,6 +5994,21 @@ values:
         parameters: null
         values: []
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.dataprocAllowedImageVersions"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.dataprocAllowedImageVersions
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.dataprocDisableDefaultServiceAccount"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.dataprocDisableDefaultServiceAccount
@@ -4970,39 +6024,24 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.dataprocRequireDiskCmekEncryption"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.dataprocRequireDiskCmekEncryption
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.dataprocRequireInternalIp"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.dataprocRequireInternalIp
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.dataprocRequireKerberos"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.dataprocRequireKerberos
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.discoveryengineDisableNonGcpDataStores"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.discoveryengineDisableNonGcpDataStores
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -5525,21 +6564,6 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.gkeDisableLegacyAbac"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.gkeDisableLegacyAbac
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.gkeDisableLegacyMetadataEndpoints"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.gkeDisableLegacyMetadataEndpoints
@@ -5573,36 +6597,6 @@ values:
   module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireDataplaneV2"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.gkeRequireDataplaneV2
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireGKEMetadataServer"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.gkeRequireGKEMetadataServer
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireIntegrityMonitoring"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.gkeRequireIntegrityMonitoring
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -5690,21 +6684,6 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireNodePoolCMEKEncryption"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.gkeRequireNodePoolCMEKEncryption
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireNodePoolSandbox"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.gkeRequireNodePoolSandbox
@@ -5753,6 +6732,21 @@ values:
   module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireSecureBoot"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.gkeRequireSecureBoot
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.gkeRequireSecurityPosture"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.gkeRequireSecurityPosture
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -5837,21 +6831,6 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.iamDisablePublicBindings"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/custom.iamDisablePublicBindings
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: null
-        enforce: 'TRUE'
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["custom.iamDisableRedisAdminRoles"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/custom.iamDisableRedisAdminRoles
@@ -5927,9 +6906,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["custom.networkRequireSubnetPrivateGoogleAccess"]:
+  module.organization-iam[0].google_org_policy_policy.default["custom.vertexaiRuntimeTemplateDisableInternetAccess"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/custom.networkRequireSubnetPrivateGoogleAccess
+    name: organizations/1234567890/policies/custom.vertexaiRuntimeTemplateDisableInternetAccess
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -5942,9 +6921,114 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["essentialcontacts.allowedContactDomains"]:
+  module.organization-iam[0].google_org_policy_policy.default["custom.vertexaiRuntimeTemplateRequireIdleShutdown"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/essentialcontacts.allowedContactDomains
+    name: organizations/1234567890/policies/custom.vertexaiRuntimeTemplateRequireIdleShutdown
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.vertexaiRuntimeTemplateRequireSecureBoot"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.vertexaiRuntimeTemplateRequireSecureBoot
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.vertexaiWorkbenchDisableDefaultServiceAccount"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.vertexaiWorkbenchDisableDefaultServiceAccount
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.vertexaiWorkbenchRequireDeleteToTrash"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.vertexaiWorkbenchRequireDeleteToTrash
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["custom.vertexaiWorkbenchRequireSecureBoot"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/custom.vertexaiWorkbenchRequireSecureBoot
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["discoveryengine.managed.allowedDataSources"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/discoveryengine.managed.allowedDataSources
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["discoveryengine.managed.disableCustomMcpServerConnector"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/discoveryengine.managed.disableCustomMcpServerConnector
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["essentialcontacts.managed.allowedContactDomains"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/essentialcontacts.managed.allowedContactDomains
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -5953,28 +7037,34 @@ values:
       - allow_all: null
         condition:
         - description: null
-          expression: '!resource.matchTag(''1234567890/org-policies'', ''allowed-essential-contacts-domains-all'')
-
-            '
-          location: null
-          title: Restrict essential contacts domains
-        deny_all: null
-        enforce: null
-        parameters: null
-        values:
-        - allowed_values:
-          - '@example.org'
-          denied_values: null
-      - allow_all: 'TRUE'
-        condition:
-        - description: null
           expression: 'resource.matchTag(''1234567890/org-policies'', ''allowed-essential-contacts-domains-all'')
 
             '
           location: null
           title: Allow essential contacts from any domain
         deny_all: null
-        enforce: null
+        enforce: 'FALSE'
+        parameters: null
+        values: []
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: '{"allowedDomains":["@example.org"]}'
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["firestore.managed.disableEnhancedTextSearch"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/firestore.managed.disableEnhancedTextSearch
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
         parameters: null
         values: []
     timeouts: null
@@ -6197,42 +7287,6 @@ values:
           - TLS_VERSION_1
           - TLS_VERSION_1_1
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["iam.allowedPolicyMemberDomains"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/iam.allowedPolicyMemberDomains
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition:
-        - description: null
-          expression: '!resource.matchTag(''1234567890/org-policies'', ''allowed-policy-member-domains-all'')
-
-            '
-          location: null
-          title: Restrict member domains
-        deny_all: null
-        enforce: null
-        parameters: null
-        values:
-        - allowed_values:
-          - is:abcd123456
-          denied_values: null
-      - allow_all: 'TRUE'
-        condition:
-        - description: null
-          expression: 'resource.matchTag(''1234567890/org-policies'', ''allowed-policy-member-domains-all'')
-
-            '
-          location: null
-          title: Allow any member domain
-        deny_all: null
-        enforce: null
-        parameters: null
-        values: []
-    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["iam.automaticIamGrantsForDefaultServiceAccounts"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/iam.automaticIamGrantsForDefaultServiceAccounts
@@ -6263,34 +7317,31 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["iam.disableServiceAccountKeyCreation"]:
+  module.organization-iam[0].google_org_policy_policy.default["iam.managed.allowedPolicyMembers"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/iam.disableServiceAccountKeyCreation
+    name: organizations/1234567890/policies/iam.managed.allowedPolicyMembers
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
       reset: null
       rules:
       - allow_all: null
-        condition: []
+        condition:
+        - description: null
+          expression: 'resource.matchTag(''1234567890/org-policies'', ''allowed-policy-member-domains-all'')
+
+            '
+          location: null
+          title: Allow any member domain
         deny_all: null
-        enforce: 'TRUE'
+        enforce: 'FALSE'
         parameters: null
         values: []
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["iam.disableServiceAccountKeyUpload"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/iam.disableServiceAccountKeyUpload
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
       - allow_all: null
         condition: []
         deny_all: null
         enforce: 'TRUE'
-        parameters: null
+        parameters: '{"allowedMemberSubjects":["group:fabric-fast-owners@google.com"],"allowedPrincipalSets":["//cloudresourcemanager.googleapis.com/organizations/1234567890"]}'
         values: []
     timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["iam.managed.disableServiceAccountApiKeyCreation"]:
@@ -6308,9 +7359,54 @@ values:
         parameters: null
         values: []
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["iam.managed.disableServiceAccountKeyCreation"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/iam.managed.disableServiceAccountKeyCreation
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["iam.managed.disableServiceAccountKeyUpload"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/iam.managed.disableServiceAccountKeyUpload
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
   ? module.organization-iam[0].google_org_policy_policy.default["iam.managed.preventPrivilegedBasicRolesForDefaultServiceAccounts"]
   : dry_run_spec: []
     name: organizations/1234567890/policies/iam.managed.preventPrivilegedBasicRolesForDefaultServiceAccounts
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["iam.managed.workloadIdentityPoolProviders"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/iam.managed.workloadIdentityPoolProviders
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -6344,21 +7440,6 @@ values:
   module.organization-iam[0].google_org_policy_policy.default["iam.workloadIdentityPoolAwsAccounts"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/iam.workloadIdentityPoolAwsAccounts
-    parent: organizations/1234567890
-    spec:
-    - inherit_from_parent: null
-      reset: null
-      rules:
-      - allow_all: null
-        condition: []
-        deny_all: 'TRUE'
-        enforce: null
-        parameters: null
-        values: []
-    timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["iam.workloadIdentityPoolProviders"]:
-    dry_run_spec: []
-    name: organizations/1234567890/policies/iam.workloadIdentityPoolProviders
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -6425,6 +7506,66 @@ values:
           - all-traffic
           denied_values: null
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["run.managed.disableEphemeralDisk"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/run.managed.disableEphemeralDisk
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["run.managed.disableInlinedSource"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/run.managed.disableInlinedSource
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["run.managed.disableJobsEphemeralDisk"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/run.managed.disableJobsEphemeralDisk
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["run.managed.disableWorkerPoolsEphemeralDisk"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/run.managed.disableWorkerPoolsEphemeralDisk
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: null
+        values: []
+    timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["run.managed.requireInvokerIam"]:
     dry_run_spec: []
     name: organizations/1234567890/policies/run.managed.requireInvokerIam
@@ -6440,9 +7581,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["sql.restrictAuthorizedNetworks"]:
+  module.organization-iam[0].google_org_policy_policy.default["sql.managed.restrictAuthorizedNetworks"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/sql.restrictAuthorizedNetworks
+    name: organizations/1234567890/policies/sql.managed.restrictAuthorizedNetworks
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -6455,9 +7596,9 @@ values:
         parameters: null
         values: []
     timeouts: null
-  module.organization-iam[0].google_org_policy_policy.default["sql.restrictPublicIp"]:
+  module.organization-iam[0].google_org_policy_policy.default["sql.managed.restrictPublicIp"]:
     dry_run_spec: []
-    name: organizations/1234567890/policies/sql.restrictPublicIp
+    name: organizations/1234567890/policies/sql.managed.restrictPublicIp
     parent: organizations/1234567890
     spec:
     - inherit_from_parent: null
@@ -6468,6 +7609,21 @@ values:
         deny_all: null
         enforce: 'TRUE'
         parameters: null
+        values: []
+    timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["storage.managed.softDeletePolicySeconds"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/storage.managed.softDeletePolicySeconds
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: null
+        enforce: 'TRUE'
+        parameters: '{"allowedRetentionDurationSeconds":["604800","2592000","5184000","7776000"]}'
         values: []
     timeouts: null
   module.organization-iam[0].google_org_policy_policy.default["storage.publicAccessPrevention"]:
@@ -6533,12 +7689,33 @@ values:
         parameters: null
         values: []
     timeouts: null
+  module.organization-iam[0].google_org_policy_policy.default["vertexai.configurableComputerUseToolSafetyPolicies"]:
+    dry_run_spec: []
+    name: organizations/1234567890/policies/vertexai.configurableComputerUseToolSafetyPolicies
+    parent: organizations/1234567890
+    spec:
+    - inherit_from_parent: null
+      reset: null
+      rules:
+      - allow_all: null
+        condition: []
+        deny_all: 'TRUE'
+        enforce: null
+        parameters: null
+        values: []
+    timeouts: null
   module.organization-iam[0].google_organization_iam_audit_config.default["allServices"]:
     audit_log_config:
     - exempted_members: []
       log_type: ADMIN_READ
     org_id: '1234567890'
     service: allServices
+  module.organization-iam[0].google_organization_iam_binding.authoritative["$custom_roles:org_security_policy_viewer"]:
+    condition: []
+    members:
+    - serviceAccount:iac-security-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    org_id: '1234567890'
+    role: organizations/1234567890/roles/orgSecurityPolicyViewer
   module.organization-iam[0].google_organization_iam_binding.authoritative["$custom_roles:organization_admin_viewer"]:
     condition: []
     members:
@@ -6610,6 +7787,20 @@ values:
     - serviceAccount:iac-networking-ro@ft0-prod-iac-core-0.iam.gserviceaccount.com
     org_id: '1234567890'
     role: roles/compute.orgFirewallPolicyUser
+  module.organization-iam[0].google_organization_iam_binding.authoritative["roles/compute.orgSecurityPolicyAdmin"]:
+    condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    org_id: '1234567890'
+    role: roles/compute.orgSecurityPolicyAdmin
+  module.organization-iam[0].google_organization_iam_binding.authoritative["roles/compute.orgSecurityResourceAdmin"]:
+    condition: []
+    members:
+    - serviceAccount:iac-networking-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    - serviceAccount:iac-security-rw@ft0-prod-iac-core-0.iam.gserviceaccount.com
+    org_id: '1234567890'
+    role: roles/compute.orgSecurityResourceAdmin
   module.organization-iam[0].google_organization_iam_binding.authoritative["roles/compute.osAdminLogin"]:
     condition: []
     members:
@@ -7025,6 +8216,19 @@ values:
     role_id: ngfwEnterpriseViewer
     stage: GA
     title: Custom role ngfwEnterpriseViewer
+  module.organization[0].google_organization_iam_custom_role.roles["org_security_policy_viewer"]:
+    deletion_policy: DELETE
+    description: Terraform-managed.
+    org_id: '1234567890'
+    permissions:
+    - compute.organizations.listAssociations
+    - compute.securityPolicies.get
+    - compute.securityPolicies.list
+    - compute.securityPolicies.listEffectiveTags
+    - compute.securityPolicies.listTagBindings
+    role_id: orgSecurityPolicyViewer
+    stage: GA
+    title: Custom role orgSecurityPolicyViewer
   module.organization[0].google_organization_iam_custom_role.roles["organization_admin_viewer"]:
     deletion_policy: DELETE
     description: Terraform-managed.
@@ -7072,6 +8276,17 @@ values:
     role_id: projectIamViewer
     stage: GA
     title: Custom role projectIamViewer
+  module.organization[0].google_organization_iam_custom_role.roles["service_account_iam_admin"]:
+    deletion_policy: DELETE
+    description: Terraform-managed.
+    org_id: '1234567890'
+    permissions:
+    - iam.serviceAccounts.get
+    - iam.serviceAccounts.getIamPolicy
+    - iam.serviceAccounts.setIamPolicy
+    role_id: serviceAccountIamAdmin
+    stage: GA
+    title: Custom role serviceAccountIamAdmin
   module.organization[0].google_organization_iam_custom_role.roles["service_account_viewer"]:
     deletion_policy: DELETE
     description: Terraform-managed.
@@ -7152,67 +8367,6 @@ values:
     role_id: tagViewer
     stage: GA
     title: Custom role tagViewer
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["artifactregistryRequireCMEK"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if Artifact Registry repositories are not encrypted using
-        CMEK
-      predicate:
-      - description: null
-        expression: (!has(resource.kmsKeyName))
-        location: null
-        title: null
-      recommendation: Ensure the Artifact Registry repositoriesa are encrypted using
-        CMEK
-      resource_selector:
-      - resource_types:
-        - artifactregistry.googleapis.com/Repository
-      severity: HIGH
-    display_name: artifactregistryRequireCMEK
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudfunctionsV1RequireIngressInternalAndLoadBalancer"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if Gen1 Cloud Functions are not configured to allow only
-        internal traffic and traffic from load balancer
-      predicate:
-      - description: null
-        expression: (!resource.ingressSettings.matches("ALLOW_INTERNAL_AND_GCLB"))
-        location: null
-        title: null
-      recommendation: Ensure Gen1 Cloud Functions are configured to allow only internal
-        traffic and traffic from load balancer
-      resource_selector:
-      - resource_types:
-        - cloudfunctions.googleapis.com/CloudFunction
-      severity: MEDIUM
-    display_name: cloudfunctionsV1RequireIngressInternalAndLoadBalancer
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudfunctionsV1RequireVPCConnector"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if Gen1 Cloud Functions are configured without any VPC Connector
-      predicate:
-      - description: null
-        expression: (!has(resource.vpcConnector))
-        location: null
-        title: null
-      recommendation: Ensure Gen1 Cloud Functions are configured with VPC Connector
-      resource_selector:
-      - resource_types:
-        - cloudfunctions.googleapis.com/CloudFunction
-      severity: MEDIUM
-    display_name: cloudfunctionsV1RequireVPCConnector
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
   ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudkmsAllowedAlgorithms"]
   : custom_config:
     - custom_output: []
@@ -7230,27 +8384,6 @@ values:
         - cloudkms.googleapis.com/CryptoKeyVersion
       severity: MEDIUM
     display_name: cloudkmsAllowedAlgorithms
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudkmsAllowedProtectionLevel"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if the protection level for Cloud KMS keys is not configured
-        correctly
-      predicate:
-      - description: null
-        expression: resource.primary.protectionLevel in ["SOFTWARE"] == false
-        location: null
-        title: null
-      recommendation: Ensure the protection level for Cloud KMS keys is configured
-        correctly
-      resource_selector:
-      - resource_types:
-        - cloudkms.googleapis.com/CryptoKey
-      severity: MEDIUM
-    display_name: cloudkmsAllowedProtectionLevel
     enablement_state: ENABLED
     location: global
     organization: '1234567890'
@@ -7295,74 +8428,6 @@ values:
     location: global
     organization: '1234567890'
     timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudrunRequireBinaryAuthorization"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if Cloud Run services are configured without Binary Authorization
-        enabled
-      predicate:
-      - description: null
-        expression: (!resource.metadata.annotations.exists(data, data == 'run.googleapis.com/binary-authorization'))
-        location: null
-        title: null
-      recommendation: Ensure that Binary Authorization is enabled for all Cloud Run
-        services and that the project's default Binary Authorization policy requires
-        attestation
-      resource_selector:
-      - resource_types:
-        - run.googleapis.com/Job
-        - run.googleapis.com/Service
-      severity: HIGH
-    display_name: cloudrunRequireBinaryAuthorization
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudrunRequireEgressAllTraffic"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if Cloud Run services and jobs are not configured to route
-        all egress traffic through the VPC network
-      predicate:
-      - description: null
-        expression: "(\n  !resource.spec.template.metadata.annotations['run.googleapis.com/vpc-access-egress'].matches('all-traffic')\n\
-          )"
-        location: null
-        title: null
-      recommendation: Ensure Cloud Run services and jobs are configured to route all
-        egress traffic through the VPC network
-      resource_selector:
-      - resource_types:
-        - run.googleapis.com/Service
-        - run.googleapis.com/Job
-      severity: HIGH
-    display_name: cloudrunRequireEgressAllTraffic
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudrunRequireIngressInternalAndLoadBalancer"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if Cloud Run services are not configured to allow only internal
-        traffic and traffic from load balancer
-      predicate:
-      - description: null
-        expression: "(\n  !resource.metadata.annotations['run.googleapis.com/ingress'].matches('internal-and-cloud-load-balancing')\n\
-          )"
-        location: null
-        title: null
-      recommendation: Ensure Cloud Run services are configured to allow only internal
-        traffic and traffic from load balancer
-      resource_selector:
-      - resource_types:
-        - run.googleapis.com/Service
-      severity: HIGH
-    display_name: cloudrunRequireIngressInternalAndLoadBalancer
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
   ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["cloudsqlRequireHighAvailability"]
   : custom_config:
     - custom_output: []
@@ -7401,67 +8466,6 @@ values:
         - sqladmin.googleapis.com/Instance
       severity: HIGH
     display_name: cloudsqlRequirePointInTimeRecovery
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["computeDisableNestedVirtualization"]
-  : custom_config:
-    - custom_output: []
-      description: Detect Compute Instances with nested virtualization enabled
-      predicate:
-      - description: null
-        expression: resource.advancedMachineFeatures.enableNestedVirtualization
-        location: null
-        title: null
-      recommendation: Ensure Compute Instance does not have nested virtualization
-        enabled
-      resource_selector:
-      - resource_types:
-        - compute.googleapis.com/Instance
-      severity: MEDIUM
-    display_name: computeDisableNestedVirtualization
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["gkeDisableClientCertificateAuth"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if any GKE clusters uses client certificate authentication
-      predicate:
-      - description: null
-        expression: resource.masterAuth.clientCertificateConfig.issueClientCertificate
-          == true
-        location: null
-        title: null
-      recommendation: Ensure that control plane does not use client certificate authentication
-      resource_selector:
-      - resource_types:
-        - container.googleapis.com/Cluster
-      severity: CRITICAL
-    display_name: gkeDisableClientCertificateAuth
-    enablement_state: ENABLED
-    location: global
-    organization: '1234567890'
-    timeouts: null
-  ? module.organization[0].google_scc_management_organization_security_health_analytics_custom_module.scc_organization_custom_module["gkeRequireConfidentialNodes"]
-  : custom_config:
-    - custom_output: []
-      description: Detect if any GKE clusters are running without Confidential GKE
-        nodes
-      predicate:
-      - description: null
-        expression: (resource.confidentialNodes.enabled == false)
-        location: null
-        title: null
-      recommendation: Ensure GKE clusters are running with Confidential GKE nodes
-        enabled
-      resource_selector:
-      - resource_types:
-        - container.googleapis.com/Cluster
-      severity: MEDIUM
-    display_name: gkeRequireConfidentialNodes
     enablement_state: ENABLED
     location: global
     organization: '1234567890'
@@ -8480,17 +9484,17 @@ counts:
   google_logging_project_bucket_config: 6
   google_logging_project_settings: 3
   google_monitoring_alert_policy: 10
-  google_org_policy_custom_constraint: 89
-  google_org_policy_policy: 167
+  google_org_policy_custom_constraint: 116
+  google_org_policy_policy: 191
   google_organization_iam_audit_config: 1
-  google_organization_iam_binding: 40
-  google_organization_iam_custom_role: 14
+  google_organization_iam_binding: 43
+  google_organization_iam_custom_role: 16
   google_project: 3
   google_project_iam_binding: 64
   google_project_iam_member: 17
   google_project_service: 37
   google_project_service_identity: 11
-  google_scc_management_organization_security_health_analytics_custom_module: 18
+  google_scc_management_organization_security_health_analytics_custom_module: 8
   google_service_account: 12
   google_service_account_iam_binding: 2
   google_service_account_iam_member: 4
@@ -8506,7 +9510,7 @@ counts:
   google_tags_tag_value_iam_binding: 4
   local_file: 9
   modules: 54
-  resources: 671
+  resources: 717
   terraform_data: 4
 
 outputs:

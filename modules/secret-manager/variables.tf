@@ -91,22 +91,38 @@ variable "secrets" {
       destroy_ttl = optional(string)
     }), {})
     versions = optional(map(object({
-      data            = string
+      data = object({
+        value      = optional(string)
+        path       = optional(string)
+        wo_version = optional(number)
+      })
       deletion_policy = optional(string)
       enabled         = optional(bool)
-      data_config = optional(object({
-        is_base64          = optional(bool, false)
-        is_file            = optional(bool, false)
-        write_only_version = optional(number)
-      }))
+      is_base64       = optional(bool, false)
     })), {})
-    # rotation_config = optional(object({
-    #   next_time = string
-    #   period    = number
-    # }))
-    # topics
+    rotation_config = optional(object({
+      next_time = optional(string)
+      period    = string
+    }))
+    topics = optional(list(string))
   }))
   default = {}
+  validation {
+    condition = alltrue(flatten([
+      for k, v in var.secrets : [
+        for sk, sv in v.versions :
+        sv.data.value == null || sv.data.path == null
+      ]
+    ]))
+    error_message = "Only one of data.value and data.path can be set in versions."
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.secrets :
+      try(v.rotation_config, null) == null || (try(length(v.topics), 0) > 0)
+    ])
+    error_message = "At least one topic must be configured when rotation_config is set."
+  }
   validation {
     condition = alltrue([
       for k, v in var.secrets :

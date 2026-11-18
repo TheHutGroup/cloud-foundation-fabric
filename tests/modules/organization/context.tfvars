@@ -20,6 +20,9 @@ context = {
   email_addresses = {
     default = "foo@example.com"
   }
+  folder_ids = {
+    test = "folders/1234567890"
+  }
   iam_principals = {
     mygroup = "group:test-group@example.com"
     mysa    = "serviceAccount:test@test-project.iam.gserviceaccount.com"
@@ -34,8 +37,14 @@ context = {
   project_ids = {
     test = "test-prod-audit-logs-0"
   }
+  project_numbers = {
+    test = "1234567890"
+  }
   pubsub_topics = {
     test = "projects/test-prod-audit-logs-0/topics/audit-logs"
+  }
+  security_policies = {
+    test = "locations/global/securityPolicies/1234567890"
   }
   storage_buckets = {
     test = "test-prod-logs-audit-0"
@@ -56,6 +65,11 @@ asset_feeds = {
       }
     }
   }
+}
+cloud_armor_policy = {
+  policy_id         = "$security_policies:test"
+  excluded_folders  = ["$folder_ids:test", "folders/2222222222"]
+  excluded_projects = ["$project_numbers:test", "projects/3333333333"]
 }
 contacts = {
   "$email_addresses:default" = ["ALL"]
@@ -132,6 +146,7 @@ logging_sinks = {
     type        = "project"
   }
   test-pubsub = {
+    description = ""
     destination = "$pubsub_topics:test"
     filter      = "log_id('cloudaudit.googleapis.com/activity')"
     type        = "pubsub"
@@ -175,12 +190,21 @@ tags = {
   test = {
     id = "$tag_keys:test"
     iam = {
-      "roles/tagAdmin" = ["$iam_principals:mygroup"]
+      "roles/tagAdmin"           = ["$iam_principals:mygroup"]
+      "$custom_roles:myrole_one" = ["$iam_principals:mygroup"]
     }
     iam_bindings = {
       tag_user = {
         role    = "roles/tagUser"
         members = ["$iam_principals:myuser"]
+      }
+      tag_user_ctx = {
+        role    = "$custom_roles:myrole_two"
+        members = ["$iam_principals:myuser"]
+        condition = {
+          title      = "Test"
+          expression = "resource.matchTag('$${organization.id}/environment', 'development')"
+        }
       }
     }
     iam_bindings_additive = {
@@ -188,23 +212,48 @@ tags = {
         role   = "roles/tagViewer"
         member = "$iam_principals:mysa"
       }
+      tag_viewer_ctx = {
+        role   = "$custom_roles:myrole_two"
+        member = "$iam_principals:mysa"
+        condition = {
+          title      = "Test"
+          expression = "resource.matchTag('$${organization.id}/environment', 'development')"
+        }
+      }
     }
     values = {
       one = {
         id = "$tag_values:test/one"
         iam = {
-          "roles/tagAdmin" = ["$iam_principals:mygroup"]
+          "roles/tagAdmin"           = ["$iam_principals:mygroup"]
+          "$custom_roles:myrole_one" = ["$iam_principals:mygroup"]
         }
         iam_bindings = {
           tag_user = {
             role    = "roles/tagUser"
             members = ["$iam_principals:myuser"]
           }
+          tag_user_ctx = {
+            role    = "$custom_roles:myrole_two"
+            members = ["$iam_principals:myuser"]
+            condition = {
+              title      = "Test"
+              expression = "resource.matchTag('$${organization.id}/environment', 'development')"
+            }
+          }
         }
         iam_bindings_additive = {
           tag_viewer = {
             role   = "roles/tagViewer"
             member = "$iam_principals:mysa"
+          }
+          tag_viewer_ctx = {
+            role   = "$custom_roles:myrole_two"
+            member = "$iam_principals:mysa"
+            condition = {
+              title      = "Test"
+              expression = "resource.matchTag('$${organization.id}/environment', 'development')"
+            }
           }
         }
       }
@@ -220,7 +269,7 @@ iam_deny_policies = {
         description          = "Test Rule"
         denied_principals    = ["$iam_principals:myuser"]
         denied_permissions   = ["compute.googleapis.com/instances.create"]
-        exception_principals = ["$iam_principals:mygroup"]
+        exception_principals = ["$iam_principals:mygroup", "$iam_principals:mysa"]
         denial_condition = {
           title      = "Test Condition"
           expression = "resource.matchTag('$${organization.id}/environment', 'development')"

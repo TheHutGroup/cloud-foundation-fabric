@@ -43,14 +43,19 @@ resource "google_secret_manager_regional_secret" "default" {
       )
     }
   }
-  # dynamic "rotation" {
-  #   for_each = try(each.value.rotation_config, null) == null ? [] : [""]
-  #   content {
-  #     next_rotation_time = each.value.rotation_config.next_time
-  #     rotation_period    = each.value.rotation_config.period
-  #   }
-  # }
-  # topics
+  dynamic "rotation" {
+    for_each = try(each.value.rotation_config, null) == null ? [] : [""]
+    content {
+      next_rotation_time = each.value.rotation_config.next_time
+      rotation_period    = each.value.rotation_config.period
+    }
+  }
+  dynamic "topics" {
+    for_each = coalesce(try(each.value.topics, null), [])
+    content {
+      name = topics.value
+    }
+  }
   lifecycle {
     ignore_changes = [
       rotation[0].next_rotation_time
@@ -63,17 +68,17 @@ resource "google_secret_manager_regional_secret_version" "default" {
     for v in local.versions :
     "${v.secret}/${v.version}" => v if v.location != null
   }
-  secret          = google_secret_manager_regional_secret.default[each.value.secret].id
-  deletion_policy = each.value.deletion_policy
-  enabled         = each.value.enabled
-  is_secret_data_base64 = try(
-    each.value.data_config.is_base64, false
-  )
+  secret                = google_secret_manager_regional_secret.default[each.value.secret].id
+  deletion_policy       = each.value.deletion_policy
+  enabled               = each.value.enabled
+  is_secret_data_base64 = each.value.is_base64
   secret_data = (
-    try(each.value.data_config.is_file, null) == true
-    ? file(each.value.data)
-    : each.value.data
+    each.value.data.wo_version == null ? each.value.data_value : null
   )
+  secret_data_wo = (
+    each.value.data.wo_version == null ? null : each.value.data_value
+  )
+  secret_data_wo_version = each.value.data.wo_version
 }
 
 

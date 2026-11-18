@@ -34,3 +34,4 @@ tests:
   negs:
   ssl:
   urlmaps:
+  urlmaps-headers:

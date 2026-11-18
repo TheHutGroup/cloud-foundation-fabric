@@ -6,6 +6,10 @@ This module makes it easy to deploy a [Classic VPN](https://docs.cloud.google.co
 - [Examples](#examples)
   - [Classic VPN with single tunnel](#classic-vpn-with-single-tunnel)
   - [Classic VPN with single tunnel and custom ciphers](#classic-vpn-with-single-tunnel-and-custom-ciphers)
+  - [Classic VPN with single tunnel and BGP Route Policies](#classic-vpn-with-single-tunnel-and-bgp-route-policies)
+- [Secret values](#secret-values)
+  - [Creating a pre-shared key](#creating-a-pre-shared-key)
+  - [Upgrading existing tunnels safely](#upgrading-existing-tunnels-safely)
 - [Variables](#variables)
 - [Outputs](#outputs)
 <!-- END TOC -->
@@ -122,6 +126,138 @@ module "vpn-dynamic" {
 }
 # tftest modules=2 resources=12 inventory=vpn-single-tunnel-custom-ciphers.yaml
 ```
+
+### Classic VPN with single tunnel and BGP Route Policies
+
+```hcl
+module "vm" {
+  source     = "./fabric/modules/compute-vm"
+  project_id = "my-project"
+  zone       = "europe-west1-b"
+  name       = "my-vm"
+  network_interfaces = [{
+    nat        = true
+    network    = var.vpc.self_link
+    subnetwork = var.subnet.self_link
+  }]
+  service_account = {
+    auto_create = true
+  }
+}
+
+module "vpn-dynamic" {
+  source     = "./fabric/modules/net-vpn-dynamic"
+  project_id = "my-project"
+  region     = "europe-west1"
+  network    = var.vpc.name
+  name       = "gateway-1"
+  router_config = {
+    asn = 64514
+    route_policies = {
+      "import-rfc1918" = {
+        type = "IMPORT"
+        terms = [
+          {
+            priority = 1
+            match = {
+              expression  = "destination == '10.0.0.0/8' || destination == '172.16.0.0/12' || destination == '192.168.0.0/16'"
+              title       = "import-rfc1918-subnets"
+              description = "Accept the 3 RFC1918 subnets."
+            }
+            actions = [{
+              expression = "accept()"
+            }]
+          }
+        ]
+      }
+      "import-drop-all" = {
+        type = "IMPORT"
+        terms = [
+          {
+            priority = 2
+            match = {
+              expression  = "destination.inAnyRange(prefix('0.0.0.0/0').orLonger())"
+              title       = "default-drop"
+              description = "Drop all the routes not accepted above"
+            }
+            actions = [{
+              expression = "drop()"
+            }]
+          }
+        ]
+      }
+      "export-policy" = {
+        type = "EXPORT"
+        terms = [
+          {
+            priority = 0
+            match = {
+              expression = "destination == '192.168.0.0/24'"
+            }
+            actions = [
+              { expression = "med.set(1000)" },
+              { expression = "accept()" }
+            ]
+          }
+        ]
+      }
+    }
+  }
+  tunnels = {
+    remote-1 = {
+      bgp_peer = {
+        address = "169.254.139.134"
+        asn     = 64513
+        custom_advertise = {
+          all_subnets          = true
+          all_vpc_subnets      = false
+          all_peer_vpc_subnets = false
+          ip_ranges = {
+            "192.168.0.0/24" = "default"
+          }
+        }
+        import_policies = ["import-rfc1918", "import-drop-all"]
+        export_policies = ["export-policy"]
+      }
+      bgp_session_range = "169.254.139.133/30"
+      peer_ip           = module.vm.external_ip
+    }
+  }
+}
+# tftest modules=2 resources=15 inventory=bgp-route-policies.yaml
+```
+
+Policies are created on the router with their map key as name, and peers reference them by that same key. Editing a term is an in-place update, so names stay stable. Names the module does not manage (for example policies already defined on a pre-existing router) are passed through to the peer unchanged.
+
+## Secret values
+
+`tunnels.*.shared_secret` is an object that follows the [shape used for secrets across modules](../../adrs/modules/20261029-write-only-secrets.md):
+
+- `value` is the secret itself
+- `path` is the path to a file containing the secret, read via `file(pathexpand(path))` and relative to the root module; the file must exist at every plan
+- `wo_version` switches to the provider's write-only attribute, so that the secret is never stored in state; bump the number whenever the secret changes and needs to be sent again
+
+Only one of `value` and `path` can be set, and the secret value or file must remain present at every plan (`google_compute_vpn_tunnel` enforces `ExactlyOneOf` and `RequiredWith` on raw configuration). Without `wo_version` the secret is stored in state, and that form should only be used when this is acceptable or when upgrading an existing plain-secret tunnel in place.
+
+When `shared_secret` is omitted (`null`), the module falls back to its internally generated `random_secret` (stored in state).
+
+### Creating a pre-shared key
+
+Cloud VPN accepts pre-shared keys of 1 to 128 printable ASCII characters and recommends a 24-byte random value encoded in Base64 (32 characters):
+
+```bash
+# print a 32-character secret for inline/variable use
+openssl rand -base64 24
+
+# write a secret file for shared_secret.path without a trailing newline
+openssl rand -base64 24 | tr -d '\n' > vpn-psk.txt
+```
+
+Strip the trailing newline (`tr -d '\n'`) when writing secret files referenced via `path`: `file(pathexpand(path))` reads the file verbatim, so a trailing `\n` becomes part of the Google Cloud tunnel secret and will mismatch a peer router configured with the single-line string.
+
+### Upgrading existing tunnels safely
+
+Both `shared_secret` and `shared_secret_wo_version` on `google_compute_vpn_tunnel` are immutable (`ForceNew`). When upgrading an existing deployment from a string secret (`shared_secret = "..."`), migrate to `shared_secret = { value = "..." }` (or `{ path = "..." }`) and leave `wo_version` unset to converge with zero tunnel downtime. Adding or changing `wo_version` on an already-deployed tunnel destroys and recreates the live IPsec tunnel; use `wo_version` on new tunnels or during a planned maintenance window.
 <!-- BEGIN TFDOC -->
 ## Variables
 
@@ -134,7 +270,7 @@ module "vpn-dynamic" {
 | [router_config](variables.tf#L49) | Cloud Router configuration for the VPN. If you want to reuse an existing router, set create to false and use name to specify the desired router. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> | ✓ |  |
 | [gateway_address](variables.tf#L17) | Optional address assigned to the VPN gateway. Ignored unless gateway_address_create is set to false. | <code>string</code> |  | <code>null</code> |
 | [gateway_address_create](variables.tf#L23) | Create external address assigned to the VPN gateway. Needs to be explicitly set to false to use address in gateway_address variable. | <code>bool</code> |  | <code>true</code> |
-| [tunnels](variables.tf#L64) | VPN tunnel configurations. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [tunnels](variables.tf#L108) | VPN tunnel configurations. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 
 ## Outputs
 
@@ -145,10 +281,11 @@ module "vpn-dynamic" {
 | [id](outputs.tf#L27) | Fully qualified VPN gateway id. |  |
 | [name](outputs.tf#L32) | VPN gateway name. |  |
 | [random_secret](outputs.tf#L37) | Generated secret. | ✓ |
-| [router](outputs.tf#L44) | Router resource (only if auto-created). |  |
-| [router_name](outputs.tf#L49) | Router name. |  |
-| [self_link](outputs.tf#L54) | VPN gateway self link. |  |
-| [tunnel_names](outputs.tf#L59) | VPN tunnel names. |  |
-| [tunnel_self_links](outputs.tf#L67) | VPN tunnel self links. |  |
-| [tunnels](outputs.tf#L75) | VPN tunnel resources. |  |
+| [route_policies](outputs.tf#L44) | BGP route policy ids, keyed by route policy key. |  |
+| [router](outputs.tf#L51) | Router resource (only if auto-created). |  |
+| [router_name](outputs.tf#L56) | Router name. |  |
+| [self_link](outputs.tf#L61) | VPN gateway self link. |  |
+| [tunnel_names](outputs.tf#L66) | VPN tunnel names. |  |
+| [tunnel_self_links](outputs.tf#L74) | VPN tunnel self links. |  |
+| [tunnels](outputs.tf#L82) | VPN tunnel resources. |  |
 <!-- END TFDOC -->

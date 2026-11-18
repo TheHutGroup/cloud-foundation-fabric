@@ -29,8 +29,10 @@ The code is meant to be executed by a high level service account with powerful p
 - [Folder hierarchy](#folder-hierarchy)
 - [Projects](#projects)
   - [Factory-wide project defaults, merges, optionals](#factory-wide-project-defaults-merges-optionals)
+  - [Projects defined via the `projects` variable](#projects-defined-via-the-projects-variable)
   - [Project templates](#project-templates)
     - [Context expansion for template-derived resources](#context-expansion-for-template-derived-resources)
+  - [Organization policies and tag bindings](#organization-policies-and-tag-bindings)
   - [Service accounts and buckets](#service-accounts-and-buckets)
   - [Automation resources](#automation-resources)
     - [Prefix handling](#prefix-handling)
@@ -42,6 +44,9 @@ The code is meant to be executed by a high level service account with powerful p
   - [Service account context ids](#service-account-context-ids)
   - [Log bucket context ids](#log-bucket-context-ids)
   - [Other context ids](#other-context-ids)
+  - [IAM condition variables](#iam-condition-variables)
+- [Service agent grants outside the project](#service-agent-grants-outside-the-project)
+- [Model Armor floor settings](#model-armor-floor-settings)
 - [Example](#example)
 - [Files](#files)
 - [Variables](#variables)
@@ -65,7 +70,7 @@ Refer to the [example](#example) below for actual examples of the YAML definitio
 
 The project factory is configured via the `factories_config.projects` variable, and project files are also additionally read from the folder tree described in the previous section. It's best to limit project definition via the hierarchy tree to a minimum to avoid cross-dependencies between folders and projects, which could complicate their lifecycle.
 
-Projects can also be configured via the `projects` variable, which is internally merged in with the factory definitions.
+Projects can also be configured via the `projects` variable, which is internally merged in with the factory definitions as described [below](#projects-defined-via-the-projects-variable).
 
 The YAML format mirrors the project module, refer to the [example](#example) below for actual examples of the YAML definitions.
 
@@ -78,6 +83,43 @@ In addition to the YAML-based project configurations, the factory accepts three 
 - the `data_merges` variable allows specifying additional values for map or set based variables, which are merged with the data coming from YAML
 
 Some examples on where to use each of the three sets are [provided below](#example).
+
+### Projects defined via the `projects` variable
+
+Projects passed in via the `projects` variable go through the same defaults, overrides and merges as YAML-defined projects. If the same key is used in both, the YAML definition wins. Project templates and exclusions only apply to YAML-defined projects.
+
+Attributes left unset (`null`) in the variable get their value from `data_defaults`. To create a project without the default prefix, set `prefix` to an empty string in the variable, or to `null` in YAML.
+
+```hcl
+module "project-factory" {
+  source = "./fabric/modules/project-factory"
+  data_defaults = {
+    billing_account = "012345-67890A-ABCDEF"
+    labels          = { environment = "test" }
+    locations       = { storage = "eu" }
+    parent          = "folders/1234567890"
+    prefix          = "foo"
+  }
+  data_merges = {
+    services = ["logging.googleapis.com"]
+  }
+  factories_config = {
+    basepath = "data"
+  }
+  projects = {
+    hcl-app-0 = {
+      deletion_policy = "PREVENT"
+      services        = ["compute.googleapis.com"]
+      tags = {
+        environment = {
+          values = { test = {} }
+        }
+      }
+    }
+  }
+}
+# tftest inventory=projects-variable.yaml
+```
 
 ### Project templates
 
@@ -92,6 +134,12 @@ The set of available templates is defined via a dedicated path in the `factories
 #### Context expansion for template-derived resources
 
 Using a template makes it hard or impossible to reference project-level resources that contain the project key in the context id, as for example `$iam_principals:service_accounts/my-project/rw`. In those cases, alternate context ids are provided of the form `$iam_principals:service_accounts/_self_/rw`. Those are only available within the scope of the project itself and are currently only supported for service accounts in the `$iam_principals` and `$service_account_ids` context namespaces.
+
+### Organization policies and tag bindings
+
+Project-level organization policies and tag bindings are created after the project's own resources (services, Workload Identity pools and providers, and the other resources of the first module call), because they need the expanded context. The same is true of organization policies and tag bindings set on folders managed by the factory.
+
+An exception that must be in place for one of those resources to be created, for example an allowed issuer in `iam.workloadIdentityPoolProviders` for the project's own providers, or the tag binding that a conditional policy matches on, cannot be introduced in the same change as the resources that need it. Organization policies can also take several minutes to become effective, so a single apply would not work even if they were created first: apply the exception first, at folder or project level, and add the resources that need it in a later change.
 
 ### Service accounts and buckets
 
@@ -134,7 +182,7 @@ This allows granting broad roles on the project while ensuring that the automati
 
 Automation resources are defined via the `automation` attribute in project configurations, which supports:
 
-- a mandatory `project` attribute to define the external controlling project; this attribute does not support interpolation and needs to be explicit
+- a mandatory `project` attribute to define the external controlling project, either explicitly or via context interpolation (e.g. `$project_ids:iac-core-0`)
 - an optional `service_accounts` list where each element defines a service account in the controlling project
 - an optional `bucket` which defines a bucket and/org managed folders in the controlling project; bucket names cannot use interpolation so where bucket creation is not needed, they need to be explicit
 
@@ -198,15 +246,14 @@ iam:
 automation:
   project: $project_ids:iac-core-0
   service_accounts:
-    # sa name: foo-prod-app-example-0-rw
+    # sa name: prod-app-example-0-rw
     rw:
       description: Read/write automation sa for app example 0.
-    # sa name: foo-prod-app-example-0-ro
+    # sa name: prod-app-example-0-ro
     ro:
       description: Read-only automation sa for app example 0.
   bucket:
     # bucket name: foo-prod-app-example-0-tf-state
-    description: Terraform state bucket for app example 0.
     iam:
       roles/storage.objectCreator:
         - $iam_principals:service_accounts/iac-core-0/rw
@@ -263,7 +310,6 @@ automation:
       description: Read/write automation sa for team a app 0.
   buckets:
     state:
-      description: Terraform state bucket for team a app 0.
       iam:
         roles/storage.objectCreator:
           - $iam_principals:service_accounts/my-project/rw
@@ -281,8 +327,8 @@ Assuming keys of the form `my_folder`, `my_project`, `my_sa`, etc. this is an ex
 - `$folder_ids:my_folder`
 - `$iam_principals:my_principal`
 - `$iam_principals:service_accounts/my_project/my_sa`
-- `$iam_principals:service_agents/_self_/my_api`
-- `$iam_principals:service_agents/my_project/my_api`
+- `$iam_principals:service_agents/_self_/my_api` *only resolves for agents whose API is enabled in the project*
+- `$iam_principals:service_agents/my_project/my_api` *only resolves for agents whose API is enabled in the target project*
 - `$iam_principalsets:service_accounts/all`
 - `$kms_keys:my_key`
 - `$log_buckets:my_project/my_bucket`
@@ -292,6 +338,7 @@ Assuming keys of the form `my_folder`, `my_project`, `my_sa`, etc. this is an ex
 - `$service_account_ids:my_project/my_sa`
 - `$service_account_ids:my_project/automation/my_sa`
 - `$service_agents:compute`
+- `$storage_buckets:my_project/my_bucket`
 - `$tag_keys:my_key` *static context*
 - `$tag_keys:my_project/my_key` *project-level tag keys*
 - `$tag_values:my_key/my_value` *static context*
@@ -404,6 +451,93 @@ vpc_sc:
   perimeter_name: $vpc_sc_perimeters:default
 ```
 
+### IAM condition variables
+
+IAM conditions in project-level IAM and PAM entitlements are rendered via `templatestring`, using the variables passed in `context.condition_vars` merged with these factory-managed maps:
+
+- `folder_ids`: folder ids keyed by folder path, e.g. `${folder_ids["teams/team-a"]}`
+- `projects`: project ids keyed by project file name, e.g. `${projects["app-0-0"]}`
+- `tag_keys`: tag key ids from `context.tag_keys` and project-level tag keys keyed by `project/key`, e.g. `${tag_keys["app-0-0/environment"]}`
+- `tag_values`: tag value ids from `context.tag_values` and project-level tag values keyed by `project/key/value`, e.g. `${tag_values["app-0-0/environment/dev"]}`
+
+```yaml
+iam_bindings:
+  dev-only:
+    role: roles/viewer
+    members:
+      - $iam_principals:mygroup
+    condition:
+      title: dev-only
+      expression: >-
+        resource.matchTagId(
+          '${tag_keys["app-0-0/environment"]}',
+          '${tag_values["app-0-0/environment/dev"]}'
+        )
+```
+
+## Service agent grants outside the project
+
+The `service_agents_project_bindings` and `service_agents_folder_bindings` project attributes grant a project's own service agents roles on projects and folders the project does not own. Their `service` attribute takes a service agent name or alias, while target and role are resolved through context.
+
+Where both the granting project and the target are managed by the same factory, using `iam_by_principals` in combination with the `$service_agents` context is the preferred way of accomplishing the same, as it defines IAM grants in the context of the resource they apply to instead of the other way round.
+
+Reach for the service agent grants attributes when the target lives outside the factory, for example a folder or a project owned by a preceding stage. Service agents are defined here and are not known on the resource side, so granting from this end avoids shuffling static values around between stages, in the form of fully qualified service agent emails.
+
+## Model Armor floor settings
+
+Folders and projects support the `model_armor_floor_setting` attribute, which is passed through to the `model_armor_floor_setting` variable of the [folder](../folder/) and [project](../project/) modules. Integrated services (`ai_platform`, `google_mcp_server`) are only supported on projects, so they are only accepted in project files. A folder floor setting also applies to the projects under it.
+
+The floor setting is a singleton: removing the attribute does not reset it in GCP. The identity running the factory needs the Model Armor floor settings admin role (`roles/modelarmor.floorSettingsAdmin`) on the folder or project.
+
+```hcl
+module "project-factory" {
+  source = "./fabric/modules/project-factory"
+  data_defaults = {
+    billing_account = "012345-67890A-ABCDEF"
+    locations = {
+      storage = "eu"
+    }
+    prefix = "foo"
+  }
+  factories_config = {
+    basepath = "data"
+  }
+}
+# tftest files=ma-0,ma-1 inventory=model-armor.yaml
+```
+
+```yaml
+parent: folders/1234567890
+name: AI workloads
+model_armor_floor_setting:
+  filters:
+    malicious_uris: true
+    pi_and_jailbreak:
+      confidence_level: MEDIUM_AND_ABOVE
+    rai:
+      DANGEROUS: MEDIUM_AND_ABOVE
+      HARASSMENT: HIGH
+    sdp:
+      basic: true
+# tftest-file id=ma-0 path=data/folders/ai/.config.yaml schema=folder.schema.json
+```
+
+```yaml
+parent: $folder_ids:ai
+services:
+  - modelarmor.googleapis.com
+model_armor_floor_setting:
+  multi_language_detection: true
+  filters:
+    pi_and_jailbreak:
+      confidence_level: HIGH
+  integrated_services:
+    ai_platform:
+      mode: inspect_and_block
+      cloud_logging: true
+# tftest-file id=ma-1 path=data/projects/ai-app-0.yaml schema=project.schema.json
+```
+
 ## Example
 
 This show a module invocation using all optional features:
@@ -428,8 +562,15 @@ module "project-factory" {
     pubsub_topics = {
       feeds-topic = "projects/my-cai-feeds-project/topics/feed"
     }
+    security_policies = {
+      teams-baseline = "locations/global/securityPolicies/1234567890"
+    }
     storage_buckets = {
-      log-bucket = "log-bucket"
+      log-bucket           = "log-bucket"
+      gcs-audit-log-bucket = "gcs-logging-bucket"
+    }
+    log_buckets = {
+      audit-log-bucket = "projects/my-gcp-project-123456/locations/global/buckets/logging-bucket"
     }
     tag_values = {
       "context/gke"                = "tagValues/654321"
@@ -483,7 +624,7 @@ module "project-factory" {
     }
   }
 }
-# tftest files=t0,0,1,2,2.1,2.2,2.3,3,4,5,6,7,8,9,10,99 inventory=example.yaml
+# tftest files=t0,0,1,2,2.1,2.2,2.3,2.4,3,4,5,6,7,8,9,10,99 inventory=example.yaml
 ```
 
 A project template for GKE projects:
@@ -524,6 +665,14 @@ data_access_logs:
 name: Team B
 # explicit parent definition via key
 parent: $folder_ids:teams
+# hierarchical firewall and Cloud Armor policies managed elsewhere
+firewall_policy:
+  name: teams-baseline
+  policy: folders/1234567890/firewallPolicies/teams-baseline
+cloud_armor_policy:
+  policy_id: $security_policies:teams-baseline
+  excluded_projects:
+    - projects/1234567890
 # tftest-file id=1 path=data/folders/team-b/.config.yaml schema=folder.schema.json
 ```
 
@@ -556,6 +705,31 @@ asset_feeds:
     asset_types:
       - compute.googleapis.com/Instance
 # tftest-file id=2.3 path=data/folders/team-c/apps/test/app-x/.config.yaml schema=folder.schema.json
+```
+
+To setup logging for a given folder:
+```yaml
+name: Team D
+logging:
+  storage_location: europe-west1
+  sinks:
+    audit_gcs_logs:
+      destination: $storage_buckets:gcs-audit-log-bucket # Using a GCS storage bucket
+      type: storage
+      filter: |
+        log_id("cloudaudit.googleapis.com/activity") OR
+        log_id("cloudaudit.googleapis.com/system_event") OR
+        log_id("cloudaudit.googleapis.com/policy") OR
+        log_id("cloudaudit.googleapis.com/access_transparency")
+    audit_log_bucket_logs:
+      destination: $log_buckets:audit-log-bucket # Using a logging bucket
+      type: logging
+      filter: |
+        log_id("cloudaudit.googleapis.com/activity") OR
+        log_id("cloudaudit.googleapis.com/system_event") OR
+        log_id("cloudaudit.googleapis.com/policy") OR
+        log_id("cloudaudit.googleapis.com/access_transparency")
+# tftest-file id=2.4 path=data/folders/team-d/.config.yaml schema=folder.schema.json
 ```
 
 ```yaml
@@ -635,6 +809,8 @@ labels:
  app: app-0
  team: team-a
 parent: $folder_ids:team-a/app-0
+cloud_armor_policy:
+  policy_id: $security_policies:teams-baseline
 dns_threat_detector:
   enabled: true
 iam_by_principals:
@@ -664,7 +840,7 @@ service_accounts:
       roles/iam.serviceAccountUser:
         - $iam_principals:service_accounts/_self_/app-0-fe
         - $iam_principals:service_agents/_self_/compute
-        - $iam_principals:service_agents/dev-tb-app0-0/compute
+        - $iam_principals:service_agents/dev-tb-app0-0/storage
     iam_bindings_additive:
       test:
         role: roles/iam.serviceAccountUser
@@ -694,6 +870,11 @@ billing_budgets:
 buckets:
   app-0-bucket-a:
     location: europe-west8
+    iam:
+      roles/storage.objectViewer:
+        - $iam_principals:service_agents/_self_/compute
+      roles/storage.legacyObjectReader:
+        - $iam_principals:service_agents/dev-tb-app0-0/storage
     tag_bindings:
       context: $tag_values:context/gke
   app-0-bucket-b:
@@ -730,6 +911,8 @@ pubsub_topics:
     iam:
       roles/pubsub.subscriber:
         - group:team-a-admins@example.org
+      roles/pubsub.viewer:
+        - $iam_principals:service_agents/_self_/pubsub
   app-0-topic-b:
     subscriptions:
       app-0-topic-b-sub: {}
@@ -779,13 +962,25 @@ service_accounts:
     iam:
       roles/iam.serviceAccountTokenCreator:
         - $iam_principals:service_accounts/dev-tb-app0-0/automation/rw
+    iam_project_bindings:
+      cond-0:
+        project_id: $project_ids:dev-tb-app0-0
+        role: roles/storage.objectViewer
+        condition:
+          expression: resource.name.startsWith('projects/test')
+          title: conditional-access
 data_access_logs:
   storage.googleapis.com:
     DATA_READ:
       exempted_members:
         - $iam_principals:gcp-devops
+service_agents_project_bindings:
+  run-object-viewer:
+    service: run
+    project: $project_ids:dev-ta-app0-be
+    role: roles/storage.objectViewer
 automation:
-  project: test-pf-teams-iac-0
+  project: $project_ids:teams-iac-0
   # prefix used for automation resources can be explicitly set if needed
   # prefix: test-pf-dev-tb-0-0
   service_accounts:
@@ -797,7 +992,6 @@ automation:
     ro:
       description: Team B app 0 read-only automation sa.
   bucket:
-    description: Team B app 0 Terraform state bucket.
     iam:
       roles/storage.objectCreator:
         - $iam_principals:service_accounts/dev-tb-app0-0/automation/rw
@@ -841,17 +1035,26 @@ Granting permissions to service accounts defined in other project through interp
 ```yaml
 billing_account: 012345-67890A-BCDEF0
 labels:
- app: app-0
- team: team-b
+  app: app-0
+  team: team-b
 parent: $folder_ids:team-b/app-0
 services:
   - container.googleapis.com
   - storage.googleapis.com
+custom_roles:
+  custom_role_0:
+    permissions:
+      - compute.instances.get
+      - compute.instances.list
+    title: "Custom role 0"
+    description: "Custom role 0 description."
 iam:
   "roles/run.admin":
     - $iam_principals:service_accounts/dev-ta-app0-be/app-0-be
   "roles/run.developer":
     - $iam_principals:service_accounts/dev-tb-app0-1/app-0-be
+  "$custom_roles:custom_role_0":
+    - group:team-b-admins@example.org
 service_accounts:
   app-0-be:
     display_name: "Backend instances."
@@ -901,11 +1104,11 @@ compute.disableSerialPortAccess:
 
 | name | description | type | required | default |
 |---|---|:---:|:---:|:---:|
-| [factories_config](variables.tf#L200) | Path to folder with YAML resource description data files. Exclusions match the start of file paths, relative to their containing folder. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> | ✓ |  |
+| [factories_config](variables.tf#L201) | Path to folder with YAML resource description data files. Exclusions match the start of file paths, relative to their containing folder. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> | ✓ |  |
 | [context](variables.tf#L17) | Context-specific interpolations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [data_defaults](variables.tf#L47) | Optional default values used when corresponding project or folder data from files are missing. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [data_merges](variables.tf#L130) | Optional values that will be merged with corresponding data from files. Combines with `data_defaults`, file data, and `data_overrides`. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [data_overrides](variables.tf#L149) | Optional values that override corresponding data from files. Takes precedence over file data and `data_defaults`. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [data_defaults](variables.tf#L48) | Optional default values used when corresponding project or folder data from files are missing. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [data_merges](variables.tf#L131) | Optional values that will be merged with corresponding data from files. Combines with `data_defaults`, file data, and `data_overrides`. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [data_overrides](variables.tf#L150) | Optional values that override corresponding data from files. Takes precedence over file data and `data_defaults`. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [folders](variables-folders.tf#L17) | Folders data merged with factory data. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [notification_channels](variables-billing.tf#L17) | Notification channels used by budget alerts. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [projects](variables-projects.tf#L17) | Projects data merged with factory data. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
@@ -914,20 +1117,22 @@ compute.disableSerialPortAccess:
 
 | name | description | sensitive |
 |---|---|:---:|
-| [folder_ids](outputs.tf#L107) | Folder ids. |  |
-| [iam_principals](outputs.tf#L112) | IAM principals mappings. |  |
-| [kms_keys](outputs.tf#L117) | KMS key ids. |  |
-| [log_buckets](outputs.tf#L122) | Log bucket ids. |  |
-| [project_ids](outputs.tf#L129) | Project ids. |  |
-| [project_numbers](outputs.tf#L134) | Project numbers. |  |
-| [projects](outputs.tf#L141) | Project attributes. |  |
-| [pubsub_topics](outputs.tf#L146) | PubSub topic ids. |  |
-| [service_account_emails](outputs.tf#L153) | Service account emails. |  |
-| [service_account_iam_emails](outputs.tf#L160) | Service account IAM-format emails. |  |
-| [service_account_ids](outputs.tf#L167) | Service account IDs. |  |
-| [service_accounts](outputs.tf#L174) | Service account emails. |  |
-| [service_agents](outputs.tf#L179) | Service agent emails. |  |
-| [storage_buckets](outputs.tf#L190) | Bucket names. |  |
+| [bigquery_datasets](outputs.tf#L121) | BigQuery dataset ids. |  |
+| [custom_roles](outputs.tf#L128) | Custom role ids. |  |
+| [folder_ids](outputs.tf#L135) | Folder ids. |  |
+| [iam_principals](outputs.tf#L140) | IAM principals mappings. |  |
+| [kms_keys](outputs.tf#L145) | KMS key ids. |  |
+| [log_buckets](outputs.tf#L150) | Log bucket ids. |  |
+| [project_ids](outputs.tf#L157) | Project ids. |  |
+| [project_numbers](outputs.tf#L162) | Project numbers. |  |
+| [projects](outputs.tf#L169) | Project attributes. |  |
+| [pubsub_topics](outputs.tf#L174) | PubSub topic ids. |  |
+| [service_account_emails](outputs.tf#L181) | Service account emails. |  |
+| [service_account_iam_emails](outputs.tf#L188) | Service account IAM-format emails. |  |
+| [service_account_ids](outputs.tf#L195) | Service account IDs. |  |
+| [service_accounts](outputs.tf#L202) | Service account emails. |  |
+| [service_agents](outputs.tf#L207) | Service agent emails. |  |
+| [storage_buckets](outputs.tf#L218) | Bucket names. |  |
 <!-- END TFDOC -->
 ## Tests
 
@@ -970,8 +1175,46 @@ module "project-factory" {
   factories_config = {
     basepath = "data"
   }
+  folders = {
+    folder-hcl = {
+      parent = "folders/1234567890"
+      name   = "Folder HCL"
+      automation = {
+        project = "test-0"
+        prefix  = "auto-pfx"
+        bucket  = {}
+        service_accounts = {
+          hcl-sa = {}
+        }
+      }
+    }
+  }
 }
-# tftest modules=10 resources=36 files=test-0,test-1,test-2 inventory=test-1.yaml
+
+output "test_1_automation" {
+  value = module.project-factory.projects["test-1"].automation
+}
+# tftest files=folder-0,test-0,test-1,test-2,test-3,test-4 inventory=test-1.yaml
+```
+
+```yaml
+parent: folders/1234567890
+name: Folder 0
+automation:
+  project: $project_ids:test-0
+  bucket: null
+  service_accounts:
+    folder-sa:
+      iam_folder_roles:
+        $folder_ids:folder-0:
+          - roles/resourcemanager.projectCreator
+      iam_project_roles:
+        $project_ids:test-0:
+          - roles/viewer
+      iam_sa_roles:
+        $service_account_ids:folder-hcl/automation/hcl-sa:
+          - roles/iam.serviceAccountTokenCreator
+# tftest-file id=folder-0 path=data/folders/folder-0/.config.yaml schema=folder.schema.json
 ```
 
 ```yaml
@@ -1008,6 +1251,55 @@ automation:
     auto-tag-test:
       tag_bindings:
         project-level: $tag_values:test-0/context/project-factory
+# test forwarding of the full gcs bucket attribute surface
+buckets:
+  attrs-test:
+    autoclass: false
+    default_event_based_hold: true
+    enable_hierarchical_namespace: false
+    public_access_prevention: enforced
+    requester_pays: true
+    # rpo is only accepted on dual-region buckets
+    location: EU
+    custom_placement_config:
+      - europe-west1
+      - europe-west4
+    rpo: DEFAULT
+    cors:
+      origin:
+        - https://example.com
+      method:
+        - GET
+      response_header:
+        - Content-Type
+      max_age_seconds: 3600
+    ip_filter:
+      allow_all_service_agent_access: true
+      public_network_sources:
+        - 192.0.2.0/24
+    notification_config:
+      enabled: true
+      payload_format: JSON_API_V1
+      sa_email: service-1234567890@gs-project-accounts.iam.gserviceaccount.com
+      topic_name: attrs-test-notifications
+    website:
+      main_page_suffix: index.html
+      not_found_page: 404.html
+# test forwarding of the full logging-bucket attribute surface
+log_buckets:
+  audit-logs:
+    description: Test log bucket description.
+    locked: false
+    retention: 365
+    tag_bindings:
+      project-level: $tag_values:test-0/context/project-factory
+    views:
+      audit-view:
+        description: Test log view.
+        filter: 'LOG_ID("cloudaudit.googleapis.com/activity")'
+        iam:
+          roles/logging.viewAccessor:
+            - $iam_principals:tag-test
 # tftest-file id=test-0 path=data/projects/test-0.yaml
 ```
 
@@ -1024,7 +1316,14 @@ service_accounts:
 tag_bindings:
   org-level: $tag_values:context/project-factory
   project-level: $tag_values:test-0/context/project-factory
-# tftest-file id=test-1 path=data/projects/test-1.yaml
+automation:
+  project: test-0
+  bucket:
+    prefix: bkt-pfx
+  service_accounts:
+    custom-sa:
+      prefix: custom-pfx
+# tftest-file id=test-1 path=data/projects/test-1.yaml schema=project.schema.json
 ```
 
 ```yaml
@@ -1034,5 +1333,52 @@ prefix: bar
 services:
   - iam.googleapis.com
   - storage.googleapis.com
-# tftest-file id=test-2 path=data/projects/test-2.yaml
+automation:
+  project: test-0
+  bucket: null
+  service_accounts:
+    no-bkt-sa: {}
+buckets:
+  custom-pfx-bkt:
+    prefix: bkt-override
+service_accounts:
+  # service account IAM is applied in a second pass, so bindings declared via
+  # iam_bindings/iam_bindings_additive alone also need to trigger it
+  bindings-only:
+    iam_bindings:
+      token-creator:
+        role: roles/iam.serviceAccountTokenCreator
+        members:
+          - user:user1@example.com
+  bindings-additive-only:
+    iam_bindings_additive:
+      key-admin:
+        role: roles/iam.serviceAccountKeyAdmin
+        member: user:user1@example.com
+      # cross-service account reference, only resolvable in the second pass
+      token-creator:
+        role: roles/iam.serviceAccountTokenCreator
+        member: $iam_principals:service_accounts/_self_/bindings-only
+# tftest-file id=test-2 path=data/projects/test-2.yaml schema=project.schema.json
+```
+
+```yaml
+parent: folders/1234567890
+# partial universe object, omitted attributes use defaults
+universe:
+  prefix: tpc
+  unavailable_services:
+    - container.googleapis.com
+# tftest-file id=test-3 path=data/projects/test-3.yaml schema=project.schema.json
+```
+
+```yaml
+parent: folders/1234567890
+# partial project reuse attributes, services_enabled uses default
+project_reuse:
+  use_data_source: false
+  attributes:
+    name: foo-test-4
+    number: 1234567890
+# tftest-file id=test-4 path=data/projects/test-4.yaml schema=project.schema.json
 ```

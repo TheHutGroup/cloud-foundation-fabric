@@ -19,6 +19,7 @@ Due to the complexity of the underlying resources, changes to the configuration 
     - [Instance Groups](#instance-groups)
     - [Managed Instance Groups](#managed-instance-groups)
     - [Storage Buckets](#storage-buckets)
+    - [Cloud CDN](#cloud-cdn)
     - [Network Endpoint Groups (NEGs)](#network-endpoint-groups-negs)
     - [Zonal NEG creation](#zonal-neg-creation)
     - [Hybrid NEG creation](#hybrid-neg-creation)
@@ -34,7 +35,6 @@ Due to the complexity of the underlying resources, changes to the configuration 
 - [Deploying changes to load balancer configurations](#deploying-changes-to-load-balancer-configurations)
   - [Changing the Network Endpoint Group](#changing-the-network-endpoint-group)
   - [Updating SSL certificate](#updating-ssl-certificate)
-- [Recipes](#recipes)
 - [Files](#files)
 - [Variables](#variables)
 - [Outputs](#outputs)
@@ -385,6 +385,113 @@ module "glb-0" {
 }
 # tftest modules=1 resources=4 inventory=storage.yaml e2e
 ```
+
+#### Cloud CDN
+
+Cloud CDN can be enabled on backend buckets and backend services via the `enable_cdn` flag, and tuned via the `cdn_policy` attribute. The `bypass_cache_on_request_headers` attribute allows bypassing the cache for requests carrying specific headers (e.g. `Authorization`):
+
+```hcl
+module "glb-0" {
+  source     = "./fabric/modules/net-lb-app-ext"
+  project_id = var.project_id
+  name       = "glb-test-0"
+  backend_buckets_config = {
+    static = {
+      bucket_name = var.bucket
+      enable_cdn  = true
+      cdn_policy = {
+        bypass_cache_on_request_headers = ["Authorization", "Pragma"]
+        cache_mode                      = "CACHE_ALL_STATIC"
+      }
+    }
+  }
+  backend_service_configs = {
+    default = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west8-b/instanceGroups/ig-b"
+      }]
+      enable_cdn = true
+      cdn_policy = {
+        bypass_cache_on_request_headers = ["Authorization"]
+        cache_mode                      = "CACHE_ALL_STATIC"
+        signed_url_cache_max_age_sec    = 7200
+      }
+    }
+  }
+  urlmap_config = {
+    default_service = "default"
+    host_rules = [{
+      hosts        = ["*"]
+      path_matcher = "pathmap"
+    }]
+    path_matchers = {
+      pathmap = {
+        default_service = "default"
+        path_rules = [{
+          paths   = ["/static", "/static/*"]
+          service = "static"
+        }]
+      }
+    }
+  }
+}
+# tftest modules=1 resources=6 inventory=cloud-cdn.yaml
+```
+
+Cache policies can also be set per route via the `cache_policy` attribute of `default_route_action` and `route_action` blocks in `urlmap_config`. A route-level policy replaces the backend `cdn_policy` for matching requests, and does not inherit from policies set at higher levels of the URL map. TTLs are expressed in seconds. Route-level cache policies do not support a backend service that enables Identity-Aware Proxy (`iap_config` in `backend_service_configs`). Route-level cache policies are only supported by the global external Application Load Balancer, so `use_classic_version` must be set to `false`:
+
+```hcl
+module "glb-0" {
+  source              = "./fabric/modules/net-lb-app-ext"
+  project_id          = var.project_id
+  name                = "glb-test-0"
+  use_classic_version = false
+  backend_buckets_config = {
+    static = {
+      bucket_name = var.bucket
+      enable_cdn  = true
+    }
+  }
+  backend_service_configs = {
+    default = {
+      backends = [{
+        group = "projects/my-project/zones/europe-west8-b/instanceGroups/ig-b"
+      }]
+      enable_cdn = true
+    }
+  }
+  urlmap_config = {
+    default_service = "default"
+    host_rules = [{
+      hosts        = ["*"]
+      path_matcher = "pathmap"
+    }]
+    path_matchers = {
+      pathmap = {
+        default_service = "default"
+        path_rules = [{
+          paths   = ["/static", "/static/*"]
+          service = "static"
+          route_action = {
+            cache_policy = {
+              cache_mode       = "FORCE_CACHE_ALL"
+              default_ttl      = 3600
+              negative_caching = true
+              negative_caching_policy = [{
+                code = 404
+                ttl  = 60
+              }]
+            }
+          }
+        }]
+      }
+    }
+  }
+}
+# tftest modules=1 resources=6 inventory=cloud-cdn-route.yaml
+```
+
+The provider sends `false` for unset `negative_caching` and `request_coalescing`, which turns off these Cloud CDN defaults, so set them explicitly if you need them. For the same reason `cache_key_policy` can't be used on routes that only point to backend buckets, as the API rejects the `include_host`, `include_protocol` and `include_query_string` values the provider always sends.
 
 #### Network Endpoint Groups (NEGs)
 
@@ -800,7 +907,8 @@ module "glb-0" {
   project_id = "$project_ids:test"
   backend_buckets_config = {
     default-gcs = {
-      bucket_name = "my-bucket"
+      bucket_name          = "my-bucket"
+      edge_security_policy = "$security_policies:edge"
     }
   }
   backend_service_configs = {
@@ -809,6 +917,7 @@ module "glb-0" {
         { group = "projects/my-project/zones/europe-west8-b/instanceGroups/ig-b" },
         { group = "ig-c" }
       ]
+      security_policy = "$security_policies:waf"
     }
     neg-cloudrun = {
       backends      = [{ group = "neg-cloudrun" }]
@@ -926,6 +1035,10 @@ module "glb-0" {
     }
     project_ids = {
       test = "my-project"
+    }
+    security_policies = {
+      edge = "projects/my-project/global/securityPolicies/edge"
+      waf  = "projects/my-project/global/securityPolicies/waf"
     }
     subnets = {
       test = "projects/my-project/regions/europe-west8/subnetworks/gce"
@@ -1176,6 +1289,7 @@ After applying this change, you can update the backend service to point to the n
       port_name     = "http"
     }
   }
+# tftest skip reason=tutorial-step
 ```
 
 If you prefer to maintain the original naming convention, you can modify `neg-0` to point to the `hello2` service. After making this change, switch the backend configuration back to `neg-0`, and finally remove `neg-1`.
@@ -1209,10 +1323,6 @@ After provisioning this change, and verifying that the new certificate is provis
 
 <!-- TFDOC OPTS files:1 -->
 <!-- BEGIN TFDOC -->
-## Recipes
-
-- [Expose Cloud Run service with Global External Application Load Balancer protected by IAP](https://github.com/GoogleCloudPlatform/cloud-foundation-fabric/blob/master/modules/net-lb-app-ext/recipe-cloud-run-iap)
-
 ## Files
 
 | name | description | resources |
@@ -1235,23 +1345,23 @@ After provisioning this change, and verifying that the new certificate is provis
 
 | name | description | type | required | default |
 |---|---|:---:|:---:|:---:|
-| [name](variables.tf#L139) | Load balancer name. | <code>string</code> | ✓ |  |
-| [project_id](variables.tf#L254) | Project id. | <code>string</code> | ✓ |  |
+| [name](variables.tf#L140) | Load balancer name. | <code>string</code> | ✓ |  |
+| [project_id](variables.tf#L255) | Project id. | <code>string</code> | ✓ |  |
 | [backend_buckets_config](variables.tf#L17) | Backend buckets configuration. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [backend_service_configs](variables-backend-service.tf#L19) | Backend service level configuration. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [context](variables.tf#L52) | Context-specific interpolations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [description](variables.tf#L65) | Optional description used for resources. | <code>string</code> |  | <code>&#34;Terraform managed.&#34;</code> |
-| [forwarding_rules_config](variables.tf#L71) | The optional forwarding rules configuration. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#8230;&#125;</code> |
-| [group_configs](variables.tf#L92) | Optional unmanaged groups to create. Can be referenced in backends via key or outputs. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [description](variables.tf#L66) | Optional description used for resources. | <code>string</code> |  | <code>&#34;Terraform managed.&#34;</code> |
+| [forwarding_rules_config](variables.tf#L72) | The optional forwarding rules configuration. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#8230;&#125;</code> |
+| [group_configs](variables.tf#L93) | Optional unmanaged groups to create. Can be referenced in backends via key or outputs. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [health_check_configs](variables-health-check.tf#L19) | Optional auto-created health check configurations, use the output self-link to set it in the auto healing policy. Refer to examples for usage. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#8230;&#125;</code> |
-| [http_proxy_config](variables.tf#L106) | HTTP proxy configuration. Only used for non-classic load balancers. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [https_proxy_config](variables.tf#L117) | HTTPS proxy connfiguration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [labels](variables.tf#L133) | Labels set on resources. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
-| [neg_configs](variables.tf#L144) | Optional network endpoint groups to create. Can be referenced in backends via key or outputs. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
-| [protocol](variables.tf#L259) | Protocol supported by this load balancer. | <code>string</code> |  | <code>&#34;HTTP&#34;</code> |
-| [ssl_certificates](variables.tf#L272) | SSL target proxy certificates (only if protocol is HTTPS) for existing, custom, and managed certificates. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [http_proxy_config](variables.tf#L107) | HTTP proxy configuration. Only used for non-classic load balancers. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [https_proxy_config](variables.tf#L118) | HTTPS proxy connfiguration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [labels](variables.tf#L134) | Labels set on resources. | <code>map&#40;string&#41;</code> |  | <code>&#123;&#125;</code> |
+| [neg_configs](variables.tf#L145) | Optional network endpoint groups to create. Can be referenced in backends via key or outputs. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [protocol](variables.tf#L260) | Protocol supported by this load balancer. | <code>string</code> |  | <code>&#34;HTTP&#34;</code> |
+| [ssl_certificates](variables.tf#L273) | SSL target proxy certificates (only if protocol is HTTPS) for existing, custom, and managed certificates. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [urlmap_config](variables-urlmap.tf#L19) | The URL map configuration. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#8230;&#125;</code> |
-| [use_classic_version](variables.tf#L290) | Use classic Global Load Balancer. | <code>bool</code> |  | <code>true</code> |
+| [use_classic_version](variables.tf#L291) | Use classic Global Load Balancer. | <code>bool</code> |  | <code>true</code> |
 
 ## Outputs
 

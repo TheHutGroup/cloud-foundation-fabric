@@ -43,7 +43,12 @@ module "cas" {
   location   = "europe-west1"
   ca_pool_config = {
     create_pool = {
-      name = "test-ca"
+      name            = "test-ca"
+      enterprise_tier = true
+      publishing_options = {
+        publish_ca_cert = true
+        publish_crl     = true
+      }
     }
   }
   ca_configs = {
@@ -53,11 +58,19 @@ module "cas" {
         server_auth = true
       }
     }
-    root_ca_2 = {
+    sub_ca_1 = {
       subject = {
         common_name  = "test2.example.com"
         organization = "Example"
       }
+      subordinate_config = {
+        root_ca_id = "$ca_ids:root-ca"
+      }
+    }
+  }
+  context = {
+    ca_ids = {
+      root-ca = "projects/my-project/locations/europe-west1/caPools/root-ca/certificateAuthorities/root-ca-1"
     }
   }
 }
@@ -73,7 +86,12 @@ module "cas" {
   location   = "europe-west1"
   ca_pool_config = {
     use_pool = {
-      id = var.ca_pool_id
+      id = "$ca_pools:default"
+    }
+  }
+  context = {
+    ca_pools = {
+      default = var.ca_pool_id
     }
   }
 }
@@ -114,10 +132,10 @@ module "cas" {
 | name | description | type | required | default |
 |---|---|:---:|:---:|:---:|
 | [ca_pool_config](variables.tf#L105) | The CA pool config. Either use_pool or create_pool need to be used. Use pool takes precedence if both are defined. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> | ✓ |  |
-| [location](variables.tf#L134) | The location of the CAs. | <code>string</code> | ✓ |  |
-| [project_id](variables.tf#L139) | Project id. | <code>string</code> | ✓ |  |
+| [location](variables.tf#L151) | The location of the CAs. | <code>string</code> | ✓ |  |
+| [project_id](variables.tf#L156) | Project id. | <code>string</code> | ✓ |  |
 | [ca_configs](variables.tf#L17) | The CA configurations. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#8230;&#125;</code> |
-| [context](variables.tf#L119) | Context-specific interpolations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
+| [context](variables.tf#L134) | Context-specific interpolations. | <code>object&#40;&#123;&#8230;&#125;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [iam](variables-iam.tf#L17) | IAM bindings in {ROLE => [MEMBERS]} format. | <code>map&#40;list&#40;string&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [iam_bindings](variables-iam.tf#L24) | Authoritative IAM bindings in {KEY => {role = ROLE, members = [], condition = {}}}. Keys are arbitrary. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |
 | [iam_bindings_additive](variables-iam.tf#L39) | Individual additive IAM bindings. Keys are arbitrary. | <code>map&#40;object&#40;&#123;&#8230;&#125;&#41;&#41;</code> |  | <code>&#123;&#125;</code> |

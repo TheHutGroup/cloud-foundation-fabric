@@ -70,7 +70,15 @@ resource "google_compute_backend_service" "default" {
   protocol = (
     each.value.protocol == null ? var.protocol : each.value.protocol
   )
-  security_policy  = each.value.security_policy
+  security_policy = (
+    each.value.security_policy == null
+    ? null
+    : lookup(
+      local.ctx.security_policies,
+      each.value.security_policy,
+      each.value.security_policy
+    )
+  )
   session_affinity = each.value.session_affinity
   timeout_sec      = each.value.timeout_sec
 
@@ -117,6 +125,17 @@ resource "google_compute_backend_service" "default" {
       negative_caching             = cdn.value.negative_caching
       serve_while_stale            = cdn.value.serve_while_stale
       signed_url_cache_max_age_sec = cdn.value.signed_url_cache_max_age_sec
+      dynamic "bypass_cache_on_request_headers" {
+        for_each = (
+          cdn.value.bypass_cache_on_request_headers == null
+          ? []
+          : cdn.value.bypass_cache_on_request_headers
+        )
+        iterator = h
+        content {
+          header_name = h.value
+        }
+      }
       dynamic "cache_key_policy" {
         for_each = (
           cdn.value.cache_key_policy == null
@@ -198,14 +217,15 @@ resource "google_compute_backend_service" "default" {
     }
   }
 
-  dynamic "iap" {
-    for_each = each.value.iap_config == null ? [] : [each.value.iap_config]
-    content {
-      enabled                     = try(iap.value.enabled, true)
-      oauth2_client_id            = try(iap.value.oauth2_client_id, null)
-      oauth2_client_secret        = try(iap.value.oauth2_client_secret, null)
-      oauth2_client_secret_sha256 = try(iap.value.oauth2_client_secret_sha256, null)
-    }
+  iap {
+    enabled = (
+      each.value.iap_config != null
+      ? try(each.value.iap_config.enabled, true)
+      : false
+    )
+    oauth2_client_id            = try(each.value.iap_config.oauth2_client_id, null)
+    oauth2_client_secret        = try(each.value.iap_config.oauth2_client_secret, null)
+    oauth2_client_secret_sha256 = try(each.value.iap_config.oauth2_client_secret_sha256, null)
   }
 
   dynamic "log_config" {

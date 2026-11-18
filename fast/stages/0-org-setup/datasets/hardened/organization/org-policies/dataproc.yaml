@@ -18,11 +18,11 @@
 
 # yaml-language-server: $schema=../../../../schemas/org-policies.schema.json
 
-custom.dataprocDisableDefaultServiceAccount:
+custom.dataprocAllowedImageVersions:
   rules:
     - enforce: true
 
-custom.dataprocRequireInternalIp:
+custom.dataprocDisableDefaultServiceAccount:
   rules:
     - enforce: true
 

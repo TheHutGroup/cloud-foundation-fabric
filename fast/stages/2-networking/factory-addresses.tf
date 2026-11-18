@@ -16,6 +16,17 @@
 
 # tfdoc:file:description Arbitrary addresses factory.
 
+locals {
+  ctx_addresses = {
+    internal = merge([
+      for vpc_key, mod in module.vpc-addresses : {
+        for addr_key, addr in mod.internal_addresses :
+        "${vpc_key}/${addr_key}" => addr.address
+      }
+    ]...)
+  }
+}
+
 module "vpc-addresses" {
   source   = "../../../modules/net-address"
   for_each = { for k, v in local.vpcs : k => v if length(v.addresses) > 0 }
@@ -30,9 +41,10 @@ module "vpc-addresses" {
   network_attachments = try(each.value.addresses.network_attachments, {})
 
   context = {
-    locations   = local.ctx.locations
-    networks    = local.ctx_vpcs.self_links
-    project_ids = local.ctx_projects.project_ids
-    subnets     = local.ctx_vpcs.subnets_by_vpc
+    locations           = local.ctx.locations
+    networks            = local.ctx_vpcs.self_links
+    project_ids         = local.ctx_projects.project_ids
+    service_attachments = local.ctx.service_attachments
+    subnets             = local.ctx_vpcs.subnets_by_vpc
   }
 }

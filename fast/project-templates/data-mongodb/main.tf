@@ -15,23 +15,40 @@
  */
 
 locals {
+  psc_endpoint_key = "${var.name}-0"
   region = regex(
     "projects/[^/]+/regions/([^/]+)/subnetworks/[^/]+$",
     var.vpc_config.subnetwork_id
   )[0]
+  # shortcut for output references to avoid >79-char lines
+  cluster_region_config = (
+    mongodbatlas_advanced_cluster.default.replication_specs[0].region_configs[0]
+  )
+  database_user_passwords = {
+    for k, v in var.database_users : k => (
+      v.password == null
+      ? null
+      : (
+        v.password.path == null
+        ? v.password.value
+        : file(pathexpand(v.password.path))
+      )
+    )
+  }
 }
 
 module "addresses" {
   source     = "../../../modules/net-address"
   project_id = var.project_id
   psc_addresses = {
-    for i in range(50) : "${var.name}-${i}" => {
-      address          = cidrhost(var.vpc_config.psc_cidr_block, i)
+    (local.psc_endpoint_key) = {
+      # Avoid the network base address; GCP reserves early host addresses.
+      address          = cidrhost(var.vpc_config.psc_cidr_block, 4)
       region           = local.region
       subnet_self_link = var.vpc_config.subnetwork_id
       service_attachment = {
         psc_service_attachment_link = (
-          mongodbatlas_privatelink_endpoint.default.service_attachment_names[i]
+          mongodbatlas_privatelink_endpoint.default.service_attachment_names[0]
         )
         global_access = true
       }
@@ -44,32 +61,93 @@ resource "mongodbatlas_project" "default" {
   org_id = var.atlas_config.organization_id
 }
 
-resource "mongodbatlas_cluster" "default" {
-  project_id                  = mongodbatlas_project.default.id
-  name                        = var.atlas_config.cluster_name
-  provider_name               = "GCP"
-  provider_instance_size_name = var.atlas_config.instance_size
-  provider_region_name        = var.atlas_config.region
-  mongo_db_major_version      = var.atlas_config.database_version
+resource "mongodbatlas_advanced_cluster" "default" {
+  project_id             = mongodbatlas_project.default.id
+  name                   = var.atlas_config.cluster_name
+  cluster_type           = "REPLICASET"
+  mongo_db_major_version = var.atlas_config.database_version
+
+  replication_specs = [{
+    region_configs = [{
+      provider_name = "GCP"
+      region_name   = var.atlas_config.region
+      priority      = 7
+      electable_specs = {
+        instance_size = var.atlas_config.instance_size
+        node_count    = 3
+      }
+    }]
+  }]
+}
+
+moved {
+  from = mongodbatlas_cluster.default
+  to   = mongodbatlas_advanced_cluster.default
 }
 
 resource "mongodbatlas_privatelink_endpoint" "default" {
-  project_id    = mongodbatlas_project.default.id
-  provider_name = "GCP"
-  region        = var.atlas_config.region
+  project_id           = mongodbatlas_project.default.id
+  provider_name        = "GCP"
+  region               = var.atlas_config.region
+  port_mapping_enabled = true
 }
 
 resource "mongodbatlas_privatelink_endpoint_service" "default" {
-  project_id          = mongodbatlas_privatelink_endpoint.default.project_id
-  private_link_id     = mongodbatlas_privatelink_endpoint.default.private_link_id
-  provider_name       = "GCP"
-  endpoint_service_id = var.vpc_config.network_name
-  gcp_project_id      = var.project_id
-  dynamic "endpoints" {
-    for_each = module.addresses.psc
+  project_id                  = mongodbatlas_privatelink_endpoint.default.project_id
+  private_link_id             = mongodbatlas_privatelink_endpoint.default.private_link_id
+  provider_name               = "GCP"
+  endpoint_service_id         = module.addresses.psc[local.psc_endpoint_key].forwarding_rule.name
+  private_endpoint_ip_address = module.addresses.psc[local.psc_endpoint_key].address.address
+  gcp_project_id              = var.project_id
+}
+
+resource "mongodbatlas_database_user" "database_user" {
+  for_each = var.database_users
+  username = each.key
+  password = (
+    try(each.value.password.wo_version, null) != null
+    ? null
+    : local.database_user_passwords[each.key]
+  )
+  password_wo = (
+    try(each.value.password.wo_version, null) == null
+    ? null
+    : local.database_user_passwords[each.key]
+  )
+  password_wo_version = try(each.value.password.wo_version, null)
+  project_id          = mongodbatlas_project.default.id
+  auth_database_name  = each.value.auth_database_name
+  aws_iam_type        = each.value.aws_iam_type
+  description         = each.value.description
+  ldap_auth_type      = each.value.ldap_auth_type
+  oidc_auth_type      = each.value.oidc_auth_type
+  x509_type           = each.value.x509_type
+
+  dynamic "labels" {
+    for_each = each.value.labels
+
     content {
-      ip_address    = endpoints.value.address.address
-      endpoint_name = endpoints.value.forwarding_rule.name
+      key   = labels.key
+      value = labels.value
+    }
+  }
+
+  dynamic "roles" {
+    for_each = each.value.roles
+
+    content {
+      role_name       = roles.value.role_name
+      database_name   = roles.value.database_name
+      collection_name = roles.value.collection_name
+    }
+  }
+
+  dynamic "scopes" {
+    for_each = each.value.scopes
+
+    content {
+      name = scopes.key
+      type = scopes.value.type
     }
   }
 }

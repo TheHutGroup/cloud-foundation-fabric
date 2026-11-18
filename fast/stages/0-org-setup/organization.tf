@@ -15,6 +15,7 @@
  */
 
 locals {
+  _org_logging_settings = lookup(local.organization, "logging", null)
   ctx_condition_vars = {
     custom_roles = merge(
       local.ctx.custom_roles,
@@ -57,22 +58,30 @@ locals {
     for k, v in module.organization[0].access_levels : k => v.id
   }
   org_logging_identities = merge(
-    module.organization[0].logging_identities.kms == null ? {} : {
+    try(local._org_logging_settings.kms_key_name, null) == null ? {} : {
       "organization/logging/kms" = module.organization[0].logging_identities.kms
     },
-    module.organization[0].logging_identities.logging == null ? {} : {
+    local._org_logging_settings == null ? {} : {
       "organization/logging/sinks" = module.organization[0].logging_identities.logging
     }
   )
   org_tag_keys = {
-    for k, v in module.organization[0].tag_keys : k => v.id
+    for k, v in merge(
+      module.organization[0].tag_keys,
+      module.organization[0].network_tag_keys
+    ) : k => v.id
   }
   org_tag_values = {
-    for k, v in module.organization[0].tag_values : k => v.id
+    for k, v in merge(
+      module.organization[0].tag_values,
+      module.organization[0].network_tag_values
+    ) : k => v.id
   }
   org_tag_vars = {
-    for k, v in module.organization[0].tag_keys :
-    k => v.namespaced_name if try(v.allowed_values_regex, "") != ""
+    for k, v in merge(
+      module.organization[0].tag_keys,
+      module.organization[0].network_tag_keys
+    ) : k => v.namespaced_name if try(v.allowed_values_regex, "") != ""
   }
 }
 
@@ -181,7 +190,10 @@ module "organization-iam" {
   )
   logging_data_access = try(local.organization.data_access_logs, {})
   logging_sinks       = try(local.organization.logging.sinks, {})
-  pam_entitlements    = try(local.organization.pam_entitlements, {})
+  model_armor_floor_setting = try(
+    local.organization.model_armor_floor_setting, null
+  )
+  pam_entitlements = try(local.organization.pam_entitlements, {})
   context_aware_access_bindings = lookup(
     local.organization, "context_aware_access_bindings", {}
   )

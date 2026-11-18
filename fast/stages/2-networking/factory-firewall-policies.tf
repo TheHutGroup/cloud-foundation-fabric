@@ -31,6 +31,7 @@ locals {
       attachments   = try(v.attachments, {})
       ingress_rules = try(v.ingress_rules, {})
       egress_rules  = try(v.egress_rules, {})
+      tag_bindings  = try(v.tag_bindings, {})
     })
   }
 }
@@ -49,10 +50,16 @@ module "firewall-policies" {
   region        = try(each.value.region, null)
   egress_rules  = each.value.egress_rules
   ingress_rules = each.value.ingress_rules
+  tag_bindings  = each.value.tag_bindings
   context = {
-    folder_ids       = local.ctx_folders
-    cidr_ranges_sets = local.ctx.cidr_ranges_sets
-    tag_values       = local.ctx.tag_values
-    locations        = local.ctx.locations
+    cidr_ranges_sets        = local.ctx.cidr_ranges_sets
+    folder_ids              = local.ctx_folders
+    iam_principals          = local.ctx.iam_principals
+    locations               = local.ctx.locations
+    networks                = local.ctx_vpcs.self_links
+    project_ids             = local.ctx_projects.project_ids
+    security_profile_groups = local.ctx.security_profile_groups
+    tag_values              = local.ctx.tag_values
+    tag_vars                = local.ctx.tag_vars
   }
 }

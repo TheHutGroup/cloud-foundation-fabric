@@ -14,6 +14,16 @@
  * limitations under the License.
  */
 
+variable "binary_authorization" {
+  description = "Binary Authorization configuration."
+  type = object({
+    breakglass_justification = optional(string)
+    policy                   = optional(string)
+    use_default              = optional(bool)
+  })
+  default = null
+}
+
 variable "containers" {
   description = "Containers in name => attributes format."
   type = map(object({
@@ -264,7 +274,8 @@ variable "revision" {
 variable "service_config" {
   description = "Cloud Run service specific configuration options."
   type = object({
-    custom_audiences = optional(list(string), null)
+    custom_audiences     = optional(list(string), null)
+    default_uri_disabled = optional(bool)
     eventarc_triggers = optional(
       object({
         audit_log = optional(map(object({
@@ -294,7 +305,24 @@ variable "service_config" {
       min_instance_count         = optional(number)
       service_max_instance_count = optional(number)
     }))
+    service_scaling = optional(object({
+      manual_instance_count = optional(number)
+      max_instance_count    = optional(number)
+      min_instance_count    = optional(number)
+      mode                  = optional(string)
+    }))
     timeout = optional(string)
+    traffic = optional(list(object({
+      percent  = optional(number)
+      revision = optional(string)
+      tag      = optional(string)
+      type     = optional(string)
+    })))
+    workload_identity_config = optional(object({
+      certificate_enabled = optional(bool)
+      identity            = optional(string)
+      identity_type       = optional(string)
+    }), null)
   })
   default  = {}
   nullable = false
@@ -324,6 +352,71 @@ variable "service_config" {
     Ingress should be one of INGRESS_TRAFFIC_ALL, INGRESS_TRAFFIC_INTERNAL_ONLY,
     INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER.
     EOF
+  }
+
+  validation {
+    condition = var.service_config.traffic == null ? true : alltrue([
+      for t in var.service_config.traffic :
+      t.type == null ? true : contains([
+        "TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST",
+        "TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION"
+      ], t.type)
+    ])
+    error_message = "Traffic type should be one of TRAFFIC_TARGET_ALLOCATION_TYPE_LATEST, TRAFFIC_TARGET_ALLOCATION_TYPE_REVISION."
+  }
+
+  validation {
+    condition = var.service_config.traffic == null ? true : alltrue([
+      for t in var.service_config.traffic :
+      t.percent == null ? true : (t.percent >= 0 && t.percent <= 100)
+    ])
+    error_message = "Traffic percent must be between 0 and 100."
+  }
+
+  validation {
+    condition = var.service_config.traffic == null ? true : alltrue([
+      for t in var.service_config.traffic :
+      t.tag == null ? true : (length(t.tag) >= 3 && length(t.tag) <= 47)
+    ])
+    error_message = "Traffic tag length must be between 3 and 47 characters."
+  }
+
+  validation {
+    condition = (
+      try(var.service_config.service_scaling.mode, null) == null
+      ? true : contains(
+        ["AUTOMATIC", "MANUAL"], var.service_config.service_scaling.mode
+      )
+    )
+    error_message = "Service scaling mode should be one of AUTOMATIC, MANUAL."
+  }
+
+  validation {
+    condition = (
+      try(var.service_config.workload_identity_config.identity_type, null) == null
+      ? true : contains([
+        "IDENTITY_TYPE_SERVICE_ACCOUNT", "IDENTITY_TYPE_WORKLOAD_IDENTITY",
+      "IDENTITY_TYPE_AGENT_IDENTITY"], var.service_config.workload_identity_config.identity_type)
+    )
+    error_message = <<EOF
+    Identity type should be one of IDENTITY_TYPE_SERVICE_ACCOUNT,
+    IDENTITY_TYPE_WORKLOAD_IDENTITY, IDENTITY_TYPE_AGENT_IDENTITY.
+    EOF
+  }
+
+  validation {
+    condition = (
+      var.service_config.workload_identity_config == null || var.type == "SERVICE"
+    )
+    error_message = "Field workload_identity_config is only supported when type is SERVICE."
+  }
+
+  validation {
+    condition = (
+      try(var.service_config.workload_identity_config.identity_type, "IDENTITY_TYPE_SERVICE_ACCOUNT") == "IDENTITY_TYPE_SERVICE_ACCOUNT"
+      || var.service_account_config.email == null
+    )
+    error_message = "Field service_account_config.email cannot be set when identity type is not IDENTITY_TYPE_SERVICE_ACCOUNT."
   }
 }
 

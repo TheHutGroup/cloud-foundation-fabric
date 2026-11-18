@@ -18,19 +18,24 @@
 
 # yaml-language-server: $schema=../../../../schemas/org-policies.schema.json
 
+# cloudkms.allowedProtectionLevels:
+#   rules:
+#     - allow:
+#         values:
+#           - "HSM"
+#           - "HSM_SINGLE_TENANT"
+#           - "EXTERNAL"
+#           - "EXTERNAL_VPC"
+
 custom.cloudkmsAllowedAlgorithms:
   rules:
     - enforce: true
 
-custom.cloudkmsAllowedProtectionLevel:
+custom.cloudkmsAllowedPurpose:
   rules:
     - enforce: true
 
 custom.cloudkmsAllowedRotationPeriod:
-  rules:
-    - enforce: true
-
-custom.dataprocRequireDiskCmekEncryption:
   rules:
     - enforce: true
 
