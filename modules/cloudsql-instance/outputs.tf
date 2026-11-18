@@ -21,6 +21,11 @@ locals {
   )
 }
 
+output "available_maintenance_versions" {
+  description = "Available maintenance versions for the primary instance."
+  value       = google_sql_database_instance.primary.available_maintenance_versions
+}
+
 output "client_certificates" {
   description = "The CA Certificate used to connect to the SQL Instance via SSL."
   value       = google_sql_ssl_cert.client_certificates
@@ -83,6 +88,11 @@ output "ips" {
     for id, instance in local._all_instances :
     id => instance.private_ip_address
   }
+}
+
+output "maintenance_version" {
+  description = "Installed maintenance version of the primary instance."
+  value       = google_sql_database_instance.primary.maintenance_version
 }
 
 output "name" {

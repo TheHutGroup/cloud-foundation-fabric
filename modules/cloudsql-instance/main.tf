@@ -92,6 +92,7 @@ resource "google_sql_database_instance" "primary" {
   name                = "${local.prefix}${var.name}"
   region              = local.region
   database_version    = var.database_version
+  maintenance_version = var.maintenance_version
   encryption_key_name = local.encryption_key_name
   root_password       = var.root_password.random_password ? random_password.root_password[0].result : var.root_password.password
 
