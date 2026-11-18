@@ -229,7 +229,7 @@ values:
     external_managed_backend_bucket_migration_state: null
     external_managed_backend_bucket_migration_testing_percentage: null
     ip_protocol: TCP
-    ip_version: IPV4
+    ip_version: null
     labels: null
     load_balancing_scheme: EXTERNAL
     metadata_filters: []
